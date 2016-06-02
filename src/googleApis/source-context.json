@@ -1,0 +1,11 @@
+{
+  "cloudRepo": {
+    "repoId": {
+      "projectRepoId": {
+        "projectId": "ccavalli-test-debug-external",
+        "repoName": "default"
+      }
+    },
+    "revisionId": "22a259e7fb42d0b54ff63a97279099d2d4faa5a7"
+  }
+}
