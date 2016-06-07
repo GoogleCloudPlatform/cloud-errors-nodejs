@@ -1,15 +1,52 @@
 var GoogleAuth = require('google-auth-library');
 var fs = require('fs');
 
-function AuthClient ( ) {
-  this._authFactory = new GoogleAuth();
-  this.authClient = null;
-  this._projectId = null;
+function RetryTracker ( ) {
+
+  this._retries = 0;
+  this._maxRetries = 4;
+  this._currentTimeout = 0;
+  this._minTimeout = 1000;
+}
+
+RetryTracker.prototype.increaseRetryCount = function ( ) {
+
+  this._retries += 1;
+  this._recalculateRetryTimeout();
+}
+
+RetryTracker.prototype._recalculateRetryTimeout = function ( ) {
+
+  this._currentTimeout = this._minTimeout * Math.pow(2, (this._retries-1));
+}
+
+RetryTracker.prototype.shouldRetry = function ( ) {
+
+  return this._retries < this._maxRetries;
+}
+
+RetryTracker.prototype.notifyOfWhenToRetry = function ( cb ) {
+
+  setTimeout(
+    cb
+    , this._currentTimeout
+  );
+}
+
+function AuthClient ( projectId, shouldReportErrors ) {
+
+  this._authClient = null;
+  this._hasInited = false;
+  this._isRequesting = false;
   this._sourceContext = null;
+  this._requestQueue = [];
+  this._authFactory = new GoogleAuth();
+  // this._stubAPIKey = "AIzaSyBW3u3MqCvPeyvbtM-xvEu6d3MVYz2KUGI";
+
+  this._projectId = projectId;
+  this._shouldReportErrors = (shouldReportErrors === true) ? true : false;
 
   this._getApplicationDefaultCredentials();
-  this._aquireProjectId();
-
 }
 
 AuthClient.prototype._getApplicationDefaultCredentials = function ( ) {
@@ -27,58 +64,126 @@ AuthClient.prototype._getApplicationDefaultCredentials = function ( ) {
 
       if ( authClient.createScopedRequired && authClient.createScopedRequired() ) {
 
-        this.authClient = authClient.createScoped(scopes);
+        this._authClient = authClient.createScoped(scopes);
       } else {
 
-        this.authClient = authClient;
+        this._authClient = authClient;
       }
+
+      this._hasInited = true;
     }
   );
 }
 
-AuthClient.prototype._aquireProjectId = function ( ) {
+AuthClient.prototype._generateErrorCreationUrl ( ) {
 
-  try {
+  return [
+    "https://clouderrorreporting.googleapis.com/v1beta/projects/grimm-git/events?key"
+    , this._stubAPIKey
+  ].join("=");
+}
 
-    this._sourceContext = JSON.parse(fs.readFileSync('./source-context.json'));
-    this._projectId = this._sourceContext.cloudRepo.repoId.projectRepoId.projectId;
-  } catch ( e ) {
+AuthClient.prototype._generateErrorCreationRequestOptions ( ) {
 
-    if ( process.env.GCLOUD_PROJECT ) {
+  return {
+    url: this._generateErrorCreationUrl()
+    , method: "POST"
+  };
+}
 
-      this._projectId = process.env.GCLOUD_PROJECT;
-    } else {
+AuthClient.prototype._makeRequest = function ( ) {
 
-      console.log("Could not find project information, unable to use error api");
+  var requestPayloadSlot = [];
+  var thisRequestsPayload = {};
+  var thisRequestsCallback = null;
+  var thisRequestsRetryTracker = {};
+  var thisRequestsOptions = {};
+
+  if ( !this._areRequestsStillInQueue() ) {
+
+    return ;
+  }
+
+  requestPayloadSlot = this._requestQueue[0];
+  thisRequestsPayload = requestPayloadSlot[0];
+  thisRequestsCallback = requestPayloadSlot[1];
+  thisRequestsRetryTracker = requestPayloadSlot[2];
+  thisRequestsOptions = this._generateErrorCreationRequestOptions();
+
+  this._authClient.request(
+    thisRequestsOptions
+    , ( err, result, response ) => {
+
+      if ( err ) {
+        thisRequestsRetryTracker.increaseRetryCount();
+
+        if ( thisRequestsRetryTracker.shouldRetry() ) {
+
+          thisRequestsRetryTracker.notifyOfWhenToRetry(this._makeRequest);
+        } else {
+
+          callback(err);
+        }
+      } else {
+        callback(result);
+      }
+
+      this._requestQueue.shift();
+      this._isRequesting = false;
+      this._attemptToMakeRequest();
     }
+  );
+}
+
+AuthClient.prototype._areRequestsStillInQueue = function ( ) {
+
+  return this._requestQueue.length > 0;
+}
+
+AuthClient.prototype._pauseForClientInitialization = function ( ) {
+
+  setTimeout(
+    ( ) => {
+
+      this._attemptToMakeRequest();
+    }
+    , 1500
+  );
+}
+
+AuthClient.prototype._attemptToMakeRequest = function ( ) {
+
+  if ( this._isRequesting === true ) {
+
+    return ;
+  } else if ( this._hasInited !== true ) {
+
+    this._pauseForClientInitialization();
+  } else {
+
+    this._isRequesting = true;
+    this._makeRequest();
   }
 }
 
-AuthClient.prototype.request = function ( options, callback ) {
+AuthClient.prototype._pushErrorOntoRequestQueue = function ( err ) {
 
-  this.authClient.request(options, callback);
+  this._requestQueue.push(err);
 }
 
-AuthClient.prototype._encodeGetErrorsUrlParams = function ( options ) {
+AuthClient.prototype.sendError = function ( err, callback ) {
 
-  return "?groupId="+options.groupId+"&timeRange.period="+options.timeRange;
-}
+  if ( !this._shouldReportErrors ) {
 
-AuthClient.prototype.getErrors = function ( options, callback ) {
+    return ;
+  }
 
-  var requestOpts = Object.assign(
-    {
-      url: [
-        "https://clouderrorreporting.googleapis.com/v1beta1/projects"
-        , this._projectId
-        , "events"
-      ].join("/")+this._encodeGetErrorsUrlParams(options)
-      , method: "GET"
-    }
-    , options
-  );
-
-  this.authClient.request(requestOpts, callback);
+  this._pushErrorOntoRequestQueue([
+    JSON.stringify(err)
+    , callback
+    , new RetryTracker()
+  ]);
+  this._attemptToMakeRequest();
 }
 
 module.exports = AuthClient;
