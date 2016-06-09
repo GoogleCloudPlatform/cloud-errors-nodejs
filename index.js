@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 var gatherConfiguration = require('./src/configurationExtraction/gatherConfiguration.js');
 var AuthClient = require('./src/googleApis/AuthClient.js');
 var errorClassParsingUtils = require('./src/errorClassParsingUtils.js');

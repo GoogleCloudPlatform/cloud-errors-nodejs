@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /**
  * Checks the input for type. If input is of type number then the function will
  * return true, otherwise the function will return false.

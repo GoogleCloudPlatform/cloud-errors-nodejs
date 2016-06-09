@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /**
  * Checks the type of input and returns true if the input is of type function
  * or false if the input is not of type function.

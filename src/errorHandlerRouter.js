@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 var handleErrorClassError = require('./errorHandlers/handleErrorClassError');
 var handleObjectAsError = require('./errorHandlers/handleObjectAsError');
 var handleStringAsError = require('./errorHandlers/handleStringAsError');

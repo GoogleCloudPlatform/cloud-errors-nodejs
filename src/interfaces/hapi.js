@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 var ErrorMessage = require('../customClasses/ErrorMessage.js');
 var hapiRequestInformationExtractor = require('../requestInformationExtractors/hapiRequestInformationExtractor.js');
 var errorHandlerRouter = require('../errorHandlerRouter.js');

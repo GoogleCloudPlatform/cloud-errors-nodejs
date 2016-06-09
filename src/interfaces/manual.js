@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 var ErrorMessage = require('../customClasses/ErrorMessage.js');
 var manualRequestInformationExtractor = require('../requestInformationExtractors/manualRequestInformationExtractor');
 var errorHandlerRouter = require('../errorHandlerRouter.js');

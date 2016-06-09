@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 /**
  * Enum for uncaught handling options set on the process. Given `ignore` library
  * will not attempt to handle or log uncaught errors, given `report` the library

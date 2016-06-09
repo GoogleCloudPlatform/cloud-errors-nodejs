@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 var extractFromObject = require('../errorInformationExtractors/extractFromObject.js');
 var handleUnknownAsError = require('./handleUnknownAsError.js');
 var isObject = require('../typeCheckers/isObject.js');

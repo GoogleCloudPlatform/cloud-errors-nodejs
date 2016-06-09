@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 var isString = require('../typeCheckers/isString');
 var isNumber = require('../typeCheckers/isNumber');
 var isFunction = require('../typeCheckers/isFunction');

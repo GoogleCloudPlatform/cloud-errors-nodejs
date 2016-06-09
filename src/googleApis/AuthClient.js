@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
 var GoogleAuth = require('google-auth-library');
 var isFunction = require('../typeCheckers/isFunction');
 var RetryTracker = require('../customClasses/RetryTracker');
