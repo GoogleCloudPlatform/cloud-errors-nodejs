@@ -18,7 +18,7 @@ var isFunction = require('../typeCheckers/isFunction.js');
  */
 function handleErrorClassError ( err, errorMessage ) {
 
-  if ( !isObject(err.stack) || !isFunction(err.hasOwnProperty) ) {
+  if ( !isObject(err.stack) ) {
 
     handleUnknownAsError(err, errorMessage);
   } else {

@@ -59,13 +59,13 @@ function ErrorMessage ( ) {
       , url: ""
       , userAgent: ""
       , referrer: ""
-      , responseStatusCode: -1
+      , responseStatusCode: 0
       , remoteIp: ""
     }
     , user: ""
     , reportLocation: {
       filePath: ""
-      , lineNumber: -1
+      , lineNumber: 0
       , functionName: ""
     }
   };
@@ -270,7 +270,7 @@ ErrorMessage.prototype.setFunctionName = function ( functionName ) {
  */
 ErrorMessage.prototype.consumeRequestInformation = function ( requestInformation ) {
 
-  if ( !isObject(requestInformation) || !requestInformation.hasOwnProperty ) {
+  if ( !isObject(requestInformation) ) {
 
     return this;
   }

@@ -1,88 +1,53 @@
-var isObject = require('./src/typeCheckers/isObject.js');
-var isString = require('./src/typeCheckers/isString.js');
-var isNull = require('./src/typeCheckers/isNull.js');
-var uncaughtHandlingOptions = require('./src/constants/uncaughtHandlingOptions.js');
-var extractKeyFromKeyfile = require('./src/utils/extractKeyFromKeyfile.js');
+var gatherConfiguration = require('./src/configurationExtraction/gatherConfiguration.js');
 var AuthClient = require('./src/googleApis/AuthClient.js');
+var errorClassParsingUtils = require('./src/errorClassParsingUtils.js');
+// Begin error reporting interfaces
+var hapi = require('./src/interfaces/hapi.js');
+var manual = require('./src/interfaces/manual.js');
+var express = require('./src/interfaces/express.js');
 
-function attemptToExtractProjectIdFromEnv ( ) {
+/**
+ * @typedef ConfigurationOptions
+ * @type Object
+ * @property {String} [projectId] - the projectId of the project deployed
+ * @property {String} [keyFilename] - path to a key file to use for an API key
+ * @property {String} [key] - API key to use for communication with the service
+ * @property {uncaughtHandlingEnum}
+ *  [onUncaughtException=uncaughtHandlingEnum.ignore] - one of the uncaught
+ *  handling options
+ * @property {Object} [serviceContext] - the service context of the application
+ * @property {String} [serviceContext.service] - the service the application is
+ *  running on
+ * @property {String} [serviceContext.version] - the version the hosting
+ *  application is currently labelled as
+ */
 
-  if ( isString(process.env.GCLOUD_PROJECT) ) {
+/**
+ * @typedef ApplicationErrorReportingInterface
+ * @type Object
+ * @property {Object} hapi - The hapi plugin for StackDriver Error Reporting
+ * @property {Function} report - The manual interface to report Errors to the
+ *  StackDriver Error Reporting Service
+ * @property {Function} express - The express plugin for StackDriver Error
+ *  Reporting
+ */
 
-    return process.env.GCLOUD_PROJECT;
-  }
+// Override the default stack trace preperation function
+Error.prepareStackTrace = errorClassParsingUtils.prepareStackTraceError;
 
-  console.log("WARNING: Unable to find project id in configuration or env");
-
-  return null;
-}
-
-function attemptToExtractServiceContextFromConfiguration ( initConfiguration ) {
-
-  if ( initConfiguration.hasOwnProperty('serviceContext') ) {
-
-    return initConfiguration.serviceContext;
-  }
-
-  return {
-    service: 'my-service'
-    , version: 'alpha1'
-  };
-}
-
-function attemptToExtractExceptionHandlingFromConfiguration ( initConfiguration ) {
-
-  if ( initConfiguration.hasOwnProperty('onUncaughtException')
-    && uncaughtHandlingOptions.hasOwnProperty(initConfiguration.onUncaughtException) ) {
-
-    return initConfiguration.onUncaughtException;
-  }
-
-  return uncaughtHandlingOptions.ignore;
-}
-
-function attemptToExtractProjectIdFromConfiguration ( initConfiguration ) {
-
-  if ( initConfiguration.hasOwnProperty('projectId') ) {
-
-    return initConfiguration.projectId;
-  }
-
-  return attemptToExtractProjectIdFromEnv();
-}
-
-function determineReportingEnv ( ) {
-
-  return process.env.NODE_ENV === "production";
-}
-
-function gatherConfiguration ( initConfiguration ) {
-
-  var projectId = null;
-  var onUncaughtException = null;
-  var serviceContext = null;
-  var shouldReportErrorsToAPI = determineReportingEnv();
-
-  if ( isObject( initConfiguration ) ) {
-
-    projectId = attemptToExtractProjectIdFromConfiguration(initConfiguration);
-    onUncaughtException = attemptToExtractExceptionHandlingFromConfiguration(initConfiguration);
-    serviceContext = attemptToExtractServiceContextFromConfiguration(initConfiguration);
-  } else {
-
-    projectId = attemptToExtractProjectIdFromEnv();
-    onUncaughtException = uncaughtHandlingOptions.ignore;
-  }
-
-  return {
-    projectId: projectId
-    , onUncaughtException: onUncaughtException
-    , serviceContext: serviceContext
-    , shouldReportErrorsToAPI: shouldReportErrorsToAPI
-  };
-}
-
-module.exports = function ( initConfiguration ) {
+/**
+ * The entry point for initializing the Error Reporting Middleware. This
+ * function will invoke configuration gathering and attempt to create a API
+ * client which will send errors to the Error Reporting Service. Invocation of
+ * this function will also return an interface which can be used manually via
+ * the `report` function property, with hapi via the `hapi` object property or
+ * with express via the `express` function property.
+ * @function initConfiguration
+ * @param {ConfigurationOptions} initConfiguration - the desired project/error
+ *  reporting configuration
+ * @returns {ApplicationErrorReportingInterface} - The error reporting interface
+ */
+function initializeClientAndInterfaces ( initConfiguration ) {
 
   var config = gatherConfiguration(initConfiguration);
   var client = new AuthClient(
@@ -90,10 +55,11 @@ module.exports = function ( initConfiguration ) {
     , initConfiguration.shouldReportErrorsToAPI
   );
 
-
   return ({
-    hapi: require('./src/interfaces/hapi.js')(client)
-    , express: require('./src/interfaces/express.js')(client)
-    , report: require('./src/interfaces/manual.js')(client)
+    hapi: hapi(client, config)
+    , report: manual(client, config)
+    , express: express(client, config)
   });
-};
+}
+
+module.exports = initializeClientAndInterfaces;

@@ -9,8 +9,15 @@ var isObject = require('../typeCheckers/isObject.js');
  * properties types as this is allocated to the RequestInformationContainer.
  * @function manualRequestInformationExtractor
  * @param {Object} req - the request information object to extract from
+ * @param {String} [req.method] - the request method (ex GET, PUT, POST, DELETE)
+ * @param {String} [req.url] - the request url
+ * @param {String} [req.userAgent] - the requesters user-agent
+ * @param {String} [req.referrer] - the requesters referrer
+ * @param {Number} [req.statusCode] - the status code given in response to the
+ *  request
+ * @param {String} [req.remoteAddress] - the remote address of the requester
  * @returns {RequestInformationContainer} - an object containing the request
- *  information in a standardized format.
+ *  information in a standardized format
  */
 function manualRequestInformationExtractor ( req ) {
 
@@ -21,32 +28,32 @@ function manualRequestInformationExtractor ( req ) {
     return returnObject;
   }
 
-  if ( req.hasOwnProperty(req, "method") ) {
+  if ( req.hasOwnProperty("method") ) {
 
     returnObject.setMethod(req.method);
   }
 
-  if ( req.hasOwnProperty(req, "url") ) {
+  if ( req.hasOwnProperty("url") ) {
 
     returnObject.setUrl(req.url);
   }
 
-  if ( req.hasOwnProperty(req, "userAgent") ) {
+  if ( req.hasOwnProperty("userAgent") ) {
 
     returnObject.setUserAgent(req.userAgent);
   }
 
-  if ( req.hasOwnProperty(req, "referrer") ) {
+  if ( req.hasOwnProperty("referrer") ) {
 
     returnObject.setReferrer(req.referrer);
   }
 
-  if ( req.hasOwnProperty(req, "statusCode") ) {
+  if ( req.hasOwnProperty("statusCode") ) {
 
     returnObject.setUserAgent(req.statusCode);
   }
 
-  if ( req.hasOwnProperty(req, "remoteAddress") ) {
+  if ( req.hasOwnProperty("remoteAddress") ) {
 
     returnObject.setRemoteAddress(req.remoteAddress);
   }

@@ -1,47 +1,40 @@
 var GoogleAuth = require('google-auth-library');
-var fs = require('fs');
+var isFunction = require('../typeCheckers/isFunction');
+var RetryTracker = require('../customClasses/RetryTracker');
 
-function RetryTracker ( ) {
-
-  this._retries = 0;
-  this._maxRetries = 4;
-  this._currentTimeout = 0;
-  this._minTimeout = 1000;
-}
-
-RetryTracker.prototype.increaseRetryCount = function ( ) {
-
-  this._retries += 1;
-  this._recalculateRetryTimeout();
-}
-
-RetryTracker.prototype._recalculateRetryTimeout = function ( ) {
-
-  this._currentTimeout = this._minTimeout * Math.pow(2, (this._retries-1));
-}
-
-RetryTracker.prototype.shouldRetry = function ( ) {
-
-  return this._retries < this._maxRetries;
-}
-
-RetryTracker.prototype.notifyOfWhenToRetry = function ( cb ) {
-
-  setTimeout(
-    cb
-    , this._currentTimeout
-  );
-}
-
+/**
+ * The AuthClient constructor intializes several properties on the AuthClient
+ * instance, creates a new GoogleAuth authorization factory to facilitate
+ * communication with the Google error reporting API and then initializes the
+ * GoogleAuth client.
+ * @class AuthClient
+ * @classdesc The AuthClient class provides an abstraction layer for posting
+ *  errors to the Google Error Reporting API. The AuthClient class interfaces
+ *  with the RetryTracker class to provide automatic request-retry, queueing and
+ *  exponential retry backoff.
+ * @property {GoogleAuthClient} _authClient - an authorized GoogleAuth client
+ *  instance
+ * @property {Boolean} _hasInited - Indicator denoting whether or not the
+ *  underlying GoogleAuth client has been authorized and is ready to interact
+ *  with the service
+ * @property {Boolean} _isRequesting - Indicator denoting whether or not the
+ *  client is currently making a request against the service
+ * @property {Array} _requestQueue - The pending request queue, requests that
+ *  will be executed against the service
+ * @property {GoogleAuth} _authFactory - The GoogleAuth factory for creating
+ *  authorized clients
+ * @property {String} _projectId - The project Id used to request against the
+ *  service
+ * @property {Boolean} _shouldReportErrors - Indicator denoting whether or not
+ *  the client should actually attempt requests against the service
+ */
 function AuthClient ( projectId, shouldReportErrors ) {
 
   this._authClient = null;
   this._hasInited = false;
   this._isRequesting = false;
-  this._sourceContext = null;
   this._requestQueue = [];
   this._authFactory = new GoogleAuth();
-  // this._stubAPIKey = "AIzaSyBW3u3MqCvPeyvbtM-xvEu6d3MVYz2KUGI";
 
   this._projectId = projectId;
   this._shouldReportErrors = (shouldReportErrors === true) ? true : false;
@@ -49,6 +42,11 @@ function AuthClient ( projectId, shouldReportErrors ) {
   this._getApplicationDefaultCredentials();
 }
 
+/**
+ * Intializes the GoogleAuth client, authorizes it against the service and
+ * creates scoped credentials, if necessary, for the client.
+ * @function _getApplicationDefaultCredentials
+ */
 AuthClient.prototype._getApplicationDefaultCredentials = function ( ) {
 
   this._authFactory.getApplicationDefault(
@@ -75,22 +73,49 @@ AuthClient.prototype._getApplicationDefaultCredentials = function ( ) {
   );
 }
 
+/**
+ * Used for temporary interfacing with the Gated Error Creation URL. Will
+ * be removed in favor of default auth when the API goes live. Creates the
+ * url to create errors in the error API.
+ * @function _generateErrorCreationUrl
+ * @returns {String} - the url to create errors for the error reporting API
+ */
 AuthClient.prototype._generateErrorCreationUrl ( ) {
 
   return [
-    "https://clouderrorreporting.googleapis.com/v1beta/projects/grimm-git/events?key"
-    , this._stubAPIKey
-  ].join("=");
+    "https://clouderrorreporting.googleapis.com/v1beta/projects"
+    , this._projectId
+    , "events"
+  ].join("/");
 }
 
-AuthClient.prototype._generateErrorCreationRequestOptions ( ) {
+/**
+ * Creates the options object for posting erros against the error creation API
+ * @function _generateErrorCreationRequestOptions
+ * @param payload - the ErrorMessage instance to JSON.stringify for submission
+ *  to the service
+ * @returns {Object} - The options object for the requesting client
+ */
+AuthClient.prototype._generateErrorCreationRequestOptions ( payload ) {
 
   return {
     url: this._generateErrorCreationUrl()
     , method: "POST"
+    , json: payload
   };
 }
 
+/**
+ * Attempts to pull the next request off the queue and execute it. This could be
+ * an already previously made request that is being retried or an entirely new
+ * request. This function will check for the existence of a request in the queue
+ * before attempting to execute that request against the service. If a request
+ * is successfully made or has failed the max number of times this function will
+ * affect the requestQueue by shifting the first entry off the queue and then
+ * attempting to a catalyze the next request by calling the `_queueNextRequest`
+ * function.
+ * @function _makeRequest
+ */
 AuthClient.prototype._makeRequest = function ( ) {
 
   var requestPayloadSlot = [];
@@ -108,50 +133,81 @@ AuthClient.prototype._makeRequest = function ( ) {
   thisRequestsPayload = requestPayloadSlot[0];
   thisRequestsCallback = requestPayloadSlot[1];
   thisRequestsRetryTracker = requestPayloadSlot[2];
-  thisRequestsOptions = this._generateErrorCreationRequestOptions();
+  thisRequestsOptions = this._generateErrorCreationRequestOptions(
+    thisRequestsPayload
+  );
 
   this._authClient.request(
     thisRequestsOptions
-    , ( err, result, response ) => {
+    , function ( err, result, response ) {
 
       if ( err ) {
         thisRequestsRetryTracker.increaseRetryCount();
 
         if ( thisRequestsRetryTracker.shouldRetry() ) {
 
-          thisRequestsRetryTracker.notifyOfWhenToRetry(this._makeRequest);
+          thisRequestsRetryTracker.notifyOfWhenToRetry(
+            this._makeRequest.bind(this)
+          );
+
+          return ;
         } else {
 
-          callback(err);
+          if ( isFunction(thisRequestsCallback) ) {
+
+            thisRequestsCallback(err);
+          }
         }
       } else {
-        callback(result);
+
+        if ( isFunction(thisRequestsCallback) ) {
+
+          thisRequestsCallback(result);
+        }
       }
 
       this._requestQueue.shift();
       this._isRequesting = false;
-      this._attemptToMakeRequest();
-    }
+      this._queueNextRequest();
+    }.bind(this)
   );
 }
 
+/**
+ * Checks the length of the `_requestQueue` property on the instance, indicating
+ * whether or not another request or set of requests is still pending execution.
+ * @function _areRequestsStillInQueue
+ * @returns {Number} - the length of the `_requestQueue` property
+ */
 AuthClient.prototype._areRequestsStillInQueue = function ( ) {
 
   return this._requestQueue.length > 0;
 }
 
+/**
+ * Creates a timeout to wait for AuthClient init and calls back to the
+ * queueNextRequest function to reattempt queueing the next request.
+ * @function _pauseForClientInitialization
+ */
 AuthClient.prototype._pauseForClientInitialization = function ( ) {
 
   setTimeout(
-    ( ) => {
+    function ( ) {
 
-      this._attemptToMakeRequest();
-    }
+      this._queueNextRequest();
+    }.bind(this)
     , 1500
   );
 }
 
-AuthClient.prototype._attemptToMakeRequest = function ( ) {
+/**
+ * Attempts to determine if the next queued request can be executed by checking
+ * whether or not the client is already requesting or has initialized. If the
+ * client is not requesting and the client has already initialized then the
+ * next request in the queue can be executed.
+ * @function _queueNextRequest
+ */
+AuthClient.prototype._queueNextRequest = function ( ) {
 
   if ( this._isRequesting === true ) {
 
@@ -159,18 +215,32 @@ AuthClient.prototype._attemptToMakeRequest = function ( ) {
   } else if ( this._hasInited !== true ) {
 
     this._pauseForClientInitialization();
-  } else {
 
-    this._isRequesting = true;
-    this._makeRequest();
+    return ;
   }
+
+  this._isRequesting = true;
+  this._makeRequest();
 }
 
-AuthClient.prototype._pushErrorOntoRequestQueue = function ( err ) {
+/**
+ * Takes a request entry and adds it the end of the `_requestQueue` property.
+ * @function _pushRequestEntryOntoRequestQueue
+ */
+AuthClient.prototype._pushRequestEntryOntoRequestQueue = function ( entry ) {
 
-  this._requestQueue.push(err);
+  this._requestQueue.push(entry);
 }
 
+/**
+ * Public function to provide an easily invoked abstraction around sending an
+ * error to the Error Reporting API. This function accepts an ErrorMessage
+ * instance and a callback. The callback function will be invoked when the
+ * request has succeded with the success response from the service or if the
+ * request has failed the maximum number of times with the error response from
+ * the service.
+ * @function sendError
+ */
 AuthClient.prototype.sendError = function ( err, callback ) {
 
   if ( !this._shouldReportErrors ) {
@@ -178,12 +248,12 @@ AuthClient.prototype.sendError = function ( err, callback ) {
     return ;
   }
 
-  this._pushErrorOntoRequestQueue([
-    JSON.stringify(err)
+  this._pushRequestEntryOntoRequestQueue([
+    err
     , callback
     , new RetryTracker()
   ]);
-  this._attemptToMakeRequest();
+  this._queueNextRequest();
 }
 
 module.exports = AuthClient;

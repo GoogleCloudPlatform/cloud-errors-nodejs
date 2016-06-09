@@ -22,7 +22,7 @@ function attemptToExtractStatusCode ( req ) {
       return req.response.output.statusCode;
   }
 
-  return -1;
+  return 0;
 }
 
 /**
@@ -38,10 +38,10 @@ function attemptToExtractStatusCode ( req ) {
  */
 function extractRemoteAddressFromRequest ( req ) {
 
-  if ( req.headers['x-forwarded-for'] !== undefined ) {
+  if ( req.headers.hasOwnProperty('x-forwarded-for') ) {
 
     return req.headers['x-forwarded-for'];
-  } else if ( req.info && isObject(req.info) ) {
+  } else if ( isObject(req.info) ) {
 
     return req.info.remoteAddress;
   }
@@ -52,27 +52,27 @@ function extractRemoteAddressFromRequest ( req ) {
 /**
  * This function is used to extract request information from a hapi request
  * object. This function will not check for the presence of properties on the
- * request class.
+ * request object.
  * @function hapiRequestInformationExtractor
  * @param {Object} req - the hapi request object to extract from
  * @returns {RequestInformationContainer} - an object containing the request
- *  information in a standardized format.
+ *  information in a standardized format
  */
 function hapiRequestInformationExtractor ( req ) {
 
   var returnObject = new RequestInformationContainer();
 
-  if ( !req || !isObject(req) || !isObject(req.headers) ) {
+  if ( !isObject(req) || !isObject(req.headers) ) {
 
     return returnObject;
   }
 
   returnObject.setMethod(req.method);
-  returnObject.setUrl(req.url);
-  returnObject.setUserAgent(req.headers['user-agent']);
-  returnObject.setReferrer(req.headers['referrer']);
-  returnObject.setStatusCode(attemptToExtractStatusCode(req));
-  returnObject.setRemoteAddress(extractRemoteAddressFromRequest(req));
+    .setUrl(req.url)
+    .setUserAgent(req.headers['user-agent'])
+    .setReferrer(req.headers['referrer'])
+    .setStatusCode(attemptToExtractStatusCode(req))
+    .setRemoteAddress(extractRemoteAddressFromRequest(req));
 
   return returnObject;
 }

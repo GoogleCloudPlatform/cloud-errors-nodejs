@@ -7,8 +7,21 @@ var isObject = require('../typeCheckers/isObject.js');
  * compliance as that is allocated to the instance of the error message itself.
  * @function extractFromObject
  * @param {Object} err - the Object given as the content of the error
+ * @param {String} [err.message] - the error message
+ * @param {String} [err.user] - the user the error occurred for
+ * @param {String} [err.filePath] - the file path and file where the error
+ *  occurred at
+ * @param {Number} [err.lineNumber] - the line number where the error occurred
+ *  at
+ * @param {String} [err.functionName] - the function where the error occurred at
+ * @param {Object} [err.serviceContext] - the service context object of the
+ *  error
+ * @param {String} [err.serviceContext.service] - the service the error occurred
+ *  on
+ * @param {String} [err.serviceContext.version] - the version of the application
+ *  that the error occurred on
  * @param {ErrorMessage} errorMessage - the error message instance to marshal
- *  error information into.
+ *  error information into
  */
 function extractFromObject ( err, errorMessage ) {
 
