@@ -33,7 +33,7 @@ var isFunction = require('../typeCheckers/isFunction.js');
  */
 function handleErrorClassError ( err, errorMessage ) {
 
-  if ( !isObject(err.stack) ) {
+  if ( !isObject(err) || !isObject(err.stack) ) {
 
     handleUnknownAsError(err, errorMessage);
   } else {

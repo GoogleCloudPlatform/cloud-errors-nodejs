@@ -43,7 +43,9 @@ function expressErrorHandler ( client, config, err, req, res, next ) {
 
   errorHandlerRouter(err, em);
 
-  client.sendError(em);
+  console.log("HERE IS THE ERROR MESSAGE:");
+  console.log()
+  //client.sendError(em);
   next(err);
 }
 

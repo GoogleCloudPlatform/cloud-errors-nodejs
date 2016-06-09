@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var isString = require('./typeCheckers/isString.js');
-var isNumber = require('./typeCheckers/isNumber.js');
-var isObject = require('./typeCheckers/isObject.js');
+var isString = require('../typeCheckers/isString.js');
+var isNumber = require('../typeCheckers/isNumber.js');
+var isObject = require('../typeCheckers/isObject.js');
 
 /**
  * The constructor for ErrorMessage takes no arguments and is solely meant to
