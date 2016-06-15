@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 Google Inc. All Rights Reserved.
+ * Copyright 2016 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,8 @@
  */
 
 var test = require('tape');
-var expressRequestInformationExtractor = require('../../src/requestInformationExtractors/expressRequestInformationExtractor.js');
+var expressRequestInformationExtractor = require('../../lib/request-extractors/express.js');
+var Fuzzer = require('../../utils/fuzzer.js');
 
 test(
   'Test request information extraction given invalid input'
@@ -30,31 +31,23 @@ test(
       , remoteAddress: ""
     };
 
-    t.plan(4);
+    var f = new Fuzzer();
+    var cbFn = function ( value ) {
 
-    t.deepEqual(
-      expressRequestInformationExtractor()
-      , DEFAULT_RETURN_VALUE
-      , "Given no arugments the express information extractor should return the default object"
+      t.deepEqual(
+        value
+        , DEFAULT_RETURN_VALUE
+        , "Given invalid arguments the express information extractor should return the default object"
+      );
+    }
+
+    f.fuzzFunctionForTypes(
+      expressRequestInformationExtractor
+      , ["object", "object"]
+      , cbFn
     );
 
-    t.deepEqual(
-      expressRequestInformationExtractor(null)
-      , DEFAULT_RETURN_VALUE
-      , "Given null as its argument, the express information extractor should return the default object"
-    );
-
-    t.deepEqual(
-      expressRequestInformationExtractor([])
-      , DEFAULT_RETURN_VALUE
-      , "Given an array object with the headers property set as a function the default object value should be returned"
-    );
-
-    t.deepEqual(
-      expressRequestInformationExtractor({})
-      , DEFAULT_RETURN_VALUE
-      , "Given an object without the headers property set as a function the default object value should be returned"
-    );
+    t.end();
   }
 );
 
@@ -68,10 +61,12 @@ test(
       , 'user-agent': "Something like Mozilla"
       , referrer: "www.ANOTHER-TEST.com"
       , 'x-forwarded-for': '0.0.0.1'
-      , statusCode: 200
       , connection: {
         remoteAddress: "0.0.0.0"
       }
+    };
+    var FULL_RES_DERIVATION_VALUE = {
+      'statusCode': 200
     };
     var FULL_REQ_EXPECTED_VALUE = {
       method: "STUB_METHOD"
@@ -90,7 +85,9 @@ test(
       , connection: {
         remoteAddress: "0.0.2.1"
       }
-      , statusCode: 201
+    };
+    var PARTIAL_RES_DERIVATION_VALUE = {
+      statusCode: 201
     };
     var PARTIAL_REQ_EXPECTED_VALUE = {
       method: "STUB_METHOD_#2"
@@ -98,6 +95,24 @@ test(
       , userAgent: "Something like Gecko"
       , referrer: "www.SUPER-ANOTHER-TEST.com"
       , remoteAddress: "0.0.2.1"
+      , statusCode: 201
+    };
+
+    var ANOTHER_PARTIAL_REQ_DERIVATION_VALUE = {
+      method: "STUB_METHOD_#2"
+      , url: "www.SUPER-TEST.com"
+      , 'user-agent': "Something like Gecko"
+      , referrer: "www.SUPER-ANOTHER-TEST.com"
+    };
+    var ANOTHER_PARTIAL_RES_DERIVATION_VALUE = {
+      statusCode: 201
+    };
+    var ANOTHER_PARTIAL_REQ_EXPECTED_VALUE = {
+      method: "STUB_METHOD_#2"
+      , url: "www.SUPER-TEST.com"
+      , userAgent: "Something like Gecko"
+      , referrer: "www.SUPER-ANOTHER-TEST.com"
+      , remoteAddress: ""
       , statusCode: 201
     };
 
@@ -119,9 +134,10 @@ test(
 
     var tmpOutput = expressRequestInformationExtractor(
       headerFactory(FULL_REQ_DERIVATION_VALUE)
+      , FULL_RES_DERIVATION_VALUE
     );
 
-    t.plan(2);
+    t.plan(3);
 
     t.deepEqual(
       tmpOutput
@@ -136,6 +152,7 @@ test(
 
     tmpOutput = expressRequestInformationExtractor(
       headerFactory(PARTIAL_REQ_DERIVATION_VALUE)
+      , PARTIAL_RES_DERIVATION_VALUE
     );
     t.deepEqual(
       tmpOutput
@@ -147,5 +164,21 @@ test(
         , "as the value for the \'remoteAddress\' property."
       ].join(" ")
     );
+
+    var tmpOutput = expressRequestInformationExtractor(
+      headerFactory(ANOTHER_PARTIAL_REQ_DERIVATION_VALUE)
+      , ANOTHER_PARTIAL_RES_DERIVATION_VALUE
+    );
+
+    t.deepEqual(
+      tmpOutput
+      , ANOTHER_PARTIAL_REQ_EXPECTED_VALUE
+      , [
+        "Given a valid object input for the request parameter but sans an"
+        , "\'x-forwarded-for\' parameter or a remoteAddress parameter"
+        , "the request extractor should return an empty string"
+        , "as the value for the \'remoteAddress\' property."
+      ].join(" ")
+    )
   }
 )

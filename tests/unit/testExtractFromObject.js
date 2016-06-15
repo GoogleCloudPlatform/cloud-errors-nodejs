@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 Google Inc. All Rights Reserved.
+ * Copyright 2016 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  */
 
 var test = require('tape');
-var extractFromObject = require('../../src/errorInformationExtractors/extractFromObject.js');
-var ErrorMessage = require('../../src/customClasses/ErrorMessage.js');
+var extractFromObject = require('../../lib/error-extractors/object.js');
+var ErrorMessage = require('../../lib/classes/error-message.js');
 
 test(
   'Test Object Extraction Message'
@@ -158,7 +158,7 @@ test(
   , function ( t ) {
 
     var TEST_SERVICE_VALID = {service: 'test', version: 'test'};
-    var TEST_SERVICE_DEFAULT = {service: 'default', version: 'default'};
+    var TEST_SERVICE_DEFAULT = {service: '', version: ''};
     var TEST_SERVICE_INVALID = 12;
 
     t.plan(3);

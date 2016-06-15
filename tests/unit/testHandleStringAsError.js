@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 Google Inc. All Rights Reserved.
+ * Copyright 2016 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,10 @@
  */
 
 var test = require('tape');
-var ErrorMessage = require('../../src/customClasses/ErrorMessage.js');
-var handleStringAsError = require('../../src/errorHandlers/handleStringAsError.js');
-var errorClassParsingUtils = require('../../src/errorClassParsingUtils.js');
+var ErrorMessage = require('../../lib/classes/error-message.js');
+var handleStringAsError = require('../../lib/error-handlers/string.js');
+var errorClassParsingUtils = require('../../lib/error-parsing-utils.js');
 
-Error.prepareStackTrace = errorClassParsingUtils.prepareStackTraceError;
 
 test(
   'Given variable inputs and input-types in the handleStringAsError handler'

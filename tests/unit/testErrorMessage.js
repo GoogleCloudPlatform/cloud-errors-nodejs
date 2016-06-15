@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 Google Inc. All Rights Reserved.
+ * Copyright 2016 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 var test = require('tape');
-var ErrorMessage = require('../../src/CustomClasses/ErrorMessage.js');
+var ErrorMessage = require('../../lib/classes/error-message.js');
 
 test(
   'Testing the ErrorMessage custom prototype'
@@ -197,7 +197,7 @@ test(
 
     t.deepEqual(
       em.serviceContext
-      , { service: "default", version: "default" }
+      , { service: "", version: "" }
       , [
           'The service context property should have two properties:'
           , 'service and version both with a string value of: default'
@@ -317,7 +317,7 @@ test(
     var em = new ErrorMessage();
     var AFFIRMATIVE_TEST_VALUE = "VALID_INPUT_AND_TYPE";
     var DEFAULT_TEST_VALUE = "DEFAULT";
-    var DEFAULT_EM_VALUE = "default";
+    var DEFAULT_EM_VALUE = "";
 
     t.plan(10);
 
@@ -805,7 +805,7 @@ test(
 
     var em = new ErrorMessage();
     var AFFIRMATIVE_TEST_VALUE = 200;
-    var NEGATIVE_TEST_VALUE = -1;
+    var NEGATIVE_TEST_VALUE = 0;
 
     t.plan(7);
 
@@ -1089,7 +1089,7 @@ test(
 
     var em = new ErrorMessage();
     var AFFIRMATIVE_TEST_VALUE = 27;
-    var NEGATIVE_TEST_VALUE = -1;
+    var NEGATIVE_TEST_VALUE = 0;
 
     t.plan(7);
 
@@ -1234,7 +1234,7 @@ test(
     var A_VALID_STRING = "A_VALID_STRING";
     var A_VALID_NUMBER = 201;
     var NEGATIVE_STRING_CASE = "";
-    var NEGATIVE_NUMBER_CASE = -1;
+    var NEGATIVE_NUMBER_CASE = 0;
 
     var AFFIRMATIVE_TEST_VALUE = {
       method: A_VALID_STRING

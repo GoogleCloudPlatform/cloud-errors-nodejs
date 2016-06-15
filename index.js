@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 Google Inc. All Rights Reserved.
+ * Copyright 2016 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var gatherConfiguration = require('./src/configurationExtraction/gatherConfiguration.js');
-var AuthClient = require('./src/googleApis/AuthClient.js');
-var errorClassParsingUtils = require('./src/errorClassParsingUtils.js');
+/* eslint-env node */
+'use strict';
+var gatherConfiguration = require('./lib/configuration.js');
+var AuthClient = require('./lib/google-apis/auth-client.js');
 // Begin error reporting interfaces
-var hapi = require('./src/interfaces/hapi.js');
-var manual = require('./src/interfaces/manual.js');
-var express = require('./src/interfaces/express.js');
+var hapi = require('./lib/interfaces/hapi.js');
+var manual = require('./lib/interfaces/manual.js');
+var express = require('./lib/interfaces/express.js');
+var uncaughtException = require('./lib/interfaces/uncaught.js');
 
 /**
  * @typedef ConfigurationOptions
@@ -48,7 +50,7 @@ var express = require('./src/interfaces/express.js');
  */
 
 // Override the default stack trace preperation function
-Error.prepareStackTrace = errorClassParsingUtils.prepareStackTraceError;
+// Error.prepareStackTrace = errorClassParsingUtils.prepareStackTraceError
 
 /**
  * The entry point for initializing the Error Reporting Middleware. This
@@ -66,15 +68,19 @@ function initializeClientAndInterfaces ( initConfiguration ) {
 
   var config = gatherConfiguration(initConfiguration);
   var client = new AuthClient(
-    initConfiguration.projectId
-    , initConfiguration.shouldReportErrorsToAPI
+    config.projectId
+    , config.shouldReportErrorsToAPI
   );
 
-  return ({
+  // Setup the uncaught exception handler
+  uncaughtException(client, config);
+
+  // Return the application interfaces for use by the hosting application
+  return {
     hapi: hapi(client, config)
     , report: manual(client, config)
     , express: express(client, config)
-  });
+  };
 }
 
 module.exports = initializeClientAndInterfaces;

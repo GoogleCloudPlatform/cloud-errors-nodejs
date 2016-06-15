@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 Google Inc. All Rights Reserved.
+ * Copyright 2016 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,8 @@
  */
 
 var test = require('tape');
-var extractFromErrorClass = require('../../src/errorInformationExtractors/extractFromErrorClass.js');
-var ErrorMessage = require('../../src/customClasses/ErrorMessage.js');
+var extractFromErrorClass = require('../../lib/error-extractors/error.js');
+var ErrorMessage = require('../../lib/classes/error-message.js');
 
 test(
   'Test Error Class Extraction Message'
@@ -30,9 +30,11 @@ test(
     t.plan(1);
 
     extractFromErrorClass(err, em);
-    t.assert(
-      em.message === TEST_MESSAGE
-      , "Given a valid message the error message should absorb that value"
+
+    t.deepEqual(
+      em.message
+      , err.stack
+      , "Given a valid message the error message should absorb the error stack as the message"
     );
   }
 );
@@ -73,7 +75,7 @@ test(
   , function ( t ) {
 
     var TEST_SERVICE_VALID = {service: 'test', version: 'test'};
-    var TEST_SERVICE_DEFAULT = {service: 'default', version: 'default'};
+    var TEST_SERVICE_DEFAULT = {service: '', version: ''};
     var TEST_SERVICE_INVALID = 12;
 
     t.plan(3);
@@ -116,7 +118,7 @@ test(
 
     var TEST_STACK_DEFAULT = {
       filePath: ""
-      , lineNumber: -1
+      , lineNumber: 0
       , functionName: ""
     };
     var TEST_STACK_VALID = {
@@ -131,17 +133,18 @@ test(
     };
     var TEST_STACK_INVALID_TYPE = [];
 
-    t.plan(3);
+    t.plan(2);
 
-    var em = new ErrorMessage();
-    var err = new Error();
-    err.stack = TEST_STACK_VALID;
-    extractFromErrorClass(err, em);
-    t.deepEqual(
-      em.context.reportLocation
-      , TEST_STACK_VALID
-      , "Given a valid stack the error message should absorb these values"
-    );
+    // DISABLED SINCE WE MUST USE THE DEFAULT STACK DATA
+    // var em = new ErrorMessage();
+    // var err = new Error();
+    // err.stack = TEST_STACK_VALID;
+    // extractFromErrorClass(err, em);
+    // t.deepEqual(
+    //   em.context.reportLocation
+    //   , TEST_STACK_VALID
+    //   , "Given a valid stack the error message should absorb these values"
+    // );
 
     var em = new ErrorMessage();
     var err = new Error();

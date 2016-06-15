@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 Google Inc. All Rights Reserved.
+ * Copyright 2016 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,9 @@
  */
 
 var test = require('tape');
-var ErrorMessage = require('../../src/customClasses/ErrorMessage.js');
-var handleUnknownAsError = require('../../src/errorHandlers/handleUnknownAsError.js');
-var errorClassParsingUtils = require('../../src/errorClassParsingUtils.js');
-
-Error.prepareStackTrace = errorClassParsingUtils.prepareStackTraceError;
+var ErrorMessage = require('../../lib/classes/error-message.js');
+var handleUnknownAsError = require('../../lib/error-handlers/unknown.js');
+var errorClassParsingUtils = require('../../lib/error-parsing-utils.js');
 
 test(
   'Given variable inputs and input-types in the handleUnknownAsError handler'
