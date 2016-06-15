@@ -6,7 +6,8 @@
   "scripts": {
     "test": "./node_modules/tape/bin/tape ./tests/unit/*.js",
     "coverage": "./node_modules/istanbul/lib/cli.js cover -x \"fuzzer.js\" ./node_modules/tape/bin/tape ./tests/unit/*.js",
-    "style": "./node_modules/jshint/bin/jshint lib index.js"
+    "style": "./node_modules/jshint/bin/jshint lib index.js",
+    "docs": "./node_modules/.bin/jsdoc -d docs index.js lib/"
   },
   "author": "",
   "license": "Apache 2.0",
@@ -15,6 +16,7 @@
     "express": "^4.13.4",
     "hapi": "^13.4.1",
     "istanbul": "^0.4.3",
+    "jsdoc": "git+https://github.com/jsdoc3/jsdoc.git",
     "jshint": "^2.9.2",
     "lodash": "^4.13.1",
     "tape": "^4.5.1"
