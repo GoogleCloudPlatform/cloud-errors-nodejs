@@ -11,8 +11,6 @@
   "newcap": true,
   "node": true,
   "noarg": true,
-  "laxcomma": true,
-  "laxbreak": true,
   "quotmark": "single",
   "strict": true,
   "trailing": true,

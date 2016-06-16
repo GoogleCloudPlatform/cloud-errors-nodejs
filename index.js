@@ -64,8 +64,8 @@ function initializeClientAndInterfaces ( initConfiguration ) {
 
   var config = gatherConfiguration(initConfiguration);
   var client = new AuthClient(
-    config.projectId
-    , config.shouldReportErrorsToAPI
+    config.projectId,
+    config.shouldReportErrorsToAPI
   );
 
   // Setup the uncaught exception handler
