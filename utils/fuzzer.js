@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var random = require('lodash').random;
-var isNumber = require('lodash').isNumber;
-var isObject = require('lodash').isObject;
-var isString = require('lodash').isString;
-var isArray = require('lodash').isArray;
-var isNull = require('lodash').isNull;
-var indexOf = require('lodash').indexOf;
-var without = require('lodash').without;
-var maxBy = require('lodash').maxBy;
-var isFunction = require('lodash').isFunction;
+'use strict';
+var lodash = require('lodash');
+var random = lodash.random;
+var isNumber = lodash.isNumber;
+var isObject = lodash.isObject;
+var isString = lodash.isString;
+var isArray = lodash.isArray;
+var isNull = lodash.isNull;
+var indexOf = lodash.indexOf;
+var without = lodash.without;
+var maxBy = lodash.maxBy;
+var isFunction = lodash.isFunction;
 
 function Fuzzer ( ) { }
 
@@ -30,14 +32,14 @@ Fuzzer.prototype.generate = {};
 
 Fuzzer.prototype.generate.types = function ( ) {
   return [
-    "object"
-    , "array"
-    , "string"
-    , "number"
-    , "null"
-    , "undefined"
-    , "function"
-    , "boolean"
+    "object",
+    "array",
+    "string",
+    "number",
+    "null",
+    "undefined",
+    "function",
+    "boolean",
   ];
 }
 

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* eslint-env node */
 'use strict';
 var gatherConfiguration = require('./lib/configuration.js');
 var AuthClient = require('./lib/google-apis/auth-client.js');
@@ -49,9 +48,6 @@ var uncaughtException = require('./lib/interfaces/uncaught.js');
  *  Reporting
  */
 
-// Override the default stack trace preperation function
-// Error.prepareStackTrace = errorClassParsingUtils.prepareStackTraceError
-
 /**
  * The entry point for initializing the Error Reporting Middleware. This
  * function will invoke configuration gathering and attempt to create a API
@@ -77,9 +73,9 @@ function initializeClientAndInterfaces ( initConfiguration ) {
 
   // Return the application interfaces for use by the hosting application
   return {
-    hapi: hapi(client, config)
-    , report: manual(client, config)
-    , express: express(client, config)
+    hapi: hapi(client, config),
+    report: manual(client, config),
+    express: express(client, config)
   };
 }
 
