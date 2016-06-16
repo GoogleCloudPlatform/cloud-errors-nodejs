@@ -23,10 +23,10 @@
     "istanbul": "^0.4.3",
     "jsdoc": "git+https://github.com/jsdoc3/jsdoc.git",
     "jshint": "^2.9.2",
-    "lodash": "^4.13.1",
     "tape": "^4.5.1"
   },
   "dependencies": {
-    "google-auth-library": "^0.9.8"
+    "google-auth-library": "0.9.8",
+    "lodash": "4.13.1"
   }
 }
