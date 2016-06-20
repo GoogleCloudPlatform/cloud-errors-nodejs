@@ -1,7 +1,7 @@
 # Node.JS Error Reporting Agent For StackDriver
 
-> **This is not an official Google product.** This module is experimental and should be used by early
-> adopters. This module uses APIs that may be undocumented and are subject to change without notice.
+> **This is not an official Google product.** This module is experimental and may not be ready for use.
+> This module uses APIs that may be undocumented and are subject to change without notice.
 
 This modules provides StackDriver Error Reporting support for Node.JS applications.
 [StackDriver Error Reporting](https://cloud.google.com/error-reporting/) is a feature of
