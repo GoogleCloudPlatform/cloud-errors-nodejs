@@ -16,7 +16,7 @@
 
 var test = require('tape');
 var ErrorMessage = require('../../lib/classes/error-message.js');
-var handleNumberAsError = require('../../lib/error-handlers/number.js');
+var handleObjectAsError = require('../../lib/error-handlers/object.js');
 var errorClassParsingUtils = require('../../lib/error-parsing-utils.js');
 
 
@@ -29,37 +29,37 @@ test(
     t.plan(6);
 
     t.doesNotThrow(
-      handleNumberAsError.bind(null, undefined, em)
+      handleObjectAsError.bind(null, undefined, em)
       , undefined
       , "Should not throw when given undefined"
     );
 
     t.doesNotThrow(
-      handleNumberAsError.bind(null, null, em)
+      handleObjectAsError.bind(null, null, em)
       , undefined
       , "Should not throw when given null"
     );
 
     t.doesNotThrow(
-      handleNumberAsError.bind(null, "string_test", em)
+      handleObjectAsError.bind(null, "string_test", em)
       , undefined
       , "Should not throw when given a string"
     );
 
     t.doesNotThrow(
-      handleNumberAsError.bind(null, new Error("test"), em)
+      handleObjectAsError.bind(null, new Error("test"), em)
       , undefined
       , "Should not throw when given an error"
     );
 
     t.doesNotThrow(
-      handleNumberAsError.bind(null, 1.3, em)
+      handleObjectAsError.bind(null, 1.3, em)
       , undefined
       , "Should not throw when given a number"
     );
 
     t.doesNotThrow(
-      handleNumberAsError.bind(null, {}, em)
+      handleObjectAsError.bind(null, {}, em)
       , undefined
       , "Should not throw when given a valid input"
     );

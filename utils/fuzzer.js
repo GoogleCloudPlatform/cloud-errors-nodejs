@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 'use strict';
 var lodash = require('lodash');
 var random = lodash.random;
@@ -39,7 +40,7 @@ Fuzzer.prototype.generate.types = function ( ) {
     "null",
     "undefined",
     "function",
-    "boolean",
+    "boolean"
   ];
 }
 

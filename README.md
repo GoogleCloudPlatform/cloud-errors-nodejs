@@ -24,26 +24,26 @@ applications running in almost any environment. Here's an introductory video:
 
 	```shell
 	# Install through npm while saving to the local 'package.json'
-	npm install --save @google/cloud-error-handler
+	npm install --save @google/cloud-errors
 	```
 
 3. **In your application:**
 
 	```JS
 	// Require the library
-	var errorHandler = require('@google/cloud-error-handler')({
+	var errorHandler = require('@google/cloud-errors')({
 		projectId: 'my-project-id'
 	});
 
 	// Report an error to the StackDriver API
 	errorHandler.report(
 		new Error('This is a test'),
-		(requestError, requestResult) => {
+		(err, res) => {
 
-			if (requestError) {
-				console.log('Error was unable to be reported', requestError);
+			if (err) {
+				console.log('Error was unable to be reported', err);
 			} else {
-				console.log('Error reported!', requestResult);
+				console.log('Error reported!', res);
 			}
 		}
 	);
@@ -52,7 +52,7 @@ applications running in almost any environment. Here's an introductory video:
 * **When initing the StackDriver Error reporting library you can specify several options**
 
 	```JS
-	var errorHandler = require('@google/cloud-error-handler)({
+	var errorHandler = require('@google/cloud-errors')({
 		projectId: 'my-project-id',
 		key: 'my-optional-api-key',
 		onUncaughtException: 'report',
@@ -80,9 +80,9 @@ applications running in almost any environment. Here's an introductory video:
 	```
 
 > All initialization arguments are optional but please be aware that to report errors to the service
-> one must specify a projectId either through the `GLCOUD_PROJECT` enviorment variable or through the
+> one must specify a projectId either through the `GLCOUD_PROJECT` environment variable or through the
 > Javascript interface while developing locally. One must also specify a key through
-> the Javascript interface or through the `GOOGLE_APPLICATION_CREDENTIALS` enviorment variable which
+> the Javascript interface or through the `GOOGLE_APPLICATION_CREDENTIALS` environment variable which
 > should contain a path to the keyfile while developing locally.
 
 * **Using Express?**
@@ -90,13 +90,13 @@ applications running in almost any environment. Here's an introductory video:
 	```JS
 	var express = require('express');
 	var app = express();
-	var errorHandler = require('@google/cloud-error-handler')({
+	var errorHandler = require('@google/cloud-errors')({
 	  projectId: "my-project-id"
 	});
 
 	app.get(
-	  '/errorRoute'
-	  , function ( req, res, next ) {
+	  '/errorRoute',
+	  function ( req, res, next ) {
 	    // You can push in errors manually
 	    res.send("Error");
 	    res.end();
@@ -105,8 +105,8 @@ applications running in almost any environment. Here's an introductory video:
 	);
 
 	app.get(
-	  '/anotherRoute'
-	  , function ( req, res, next ) {
+	  '/anotherRoute',
+	  function ( req, res, next ) {
 	    // It'll even log potentially unexpected errors
 	    JSON.parse("{\"malformedJson\": true");
 	  }
@@ -127,7 +127,7 @@ applications running in almost any environment. Here's an introductory video:
 
 	```JS
 	var hapi = require('hapi');
-	var errorHandler = require('@google/cloud-error-handler')({
+	var errorHandler = require('@google/cloud-errors')({
 	  projectId: 'my-project-id'
 	});
 
@@ -143,16 +143,16 @@ applications running in almost any environment. Here's an introductory video:
 	    }
 
 	    console.log(
-	      'Server running at'
-	      , server.info.uri
+	      'Server running at',
+	      server.info.uri
 	    );
 	  }
 	);
 
 	server.route({
-	  method: 'GET'
-	  , path: '/errorRoute'
-	  , handler: function ( request, reply ) {
+	  method: 'GET',
+	  path: '/errorRoute',
+	  handler: function ( request, reply ) {
 
 	    throw new Error("an error");
 	    reply('Error');
@@ -161,8 +161,8 @@ applications running in almost any environment. Here's an introductory video:
 
 	// Just add in the error handler to your app
 	server.register(
-	  { register: errorHandler.hapi }
-	  , ( err ) => {
+	  { register: errorHandler.hapi },
+	  ( err ) => {
 
 	    if ( err ) {
 
@@ -172,6 +172,53 @@ applications running in almost any environment. Here's an introductory video:
 	);
 	```
 
+* **Maybe Koa?**
+
+	```JS
+		var errorHandler = require('@google/cloud-errors')({
+			projectId: 'my-project-id'
+		});
+		var koa = require('koa');
+		var app = koa();
+
+		app.use(errorHandler.koa);
+
+		app.use(function *(next) {
+			//This will set status and message
+			this.throw('Error Message', 500);
+		});
+
+		// response
+		app.use(function *(){
+			this.body = 'Hello World';
+		});
+
+		app.listen(3000);
+	```
+
+* **Perhaps Restify?**
+
+	```JS
+		function respond(req, res, next) {
+		  next(new Error('this is a restify error'));
+		}
+
+		var restify = require('restify');
+		var errorHandler = require('@google/cloud-errors')({
+			projectId: 'my-project-id'
+		});
+
+		var server = restify.createServer();
+
+		server.use(errorHandler.restify(server));
+		server.get('/hello/:name', respond);
+		server.head('/hello/:name', respond);
+
+		server.listen(8080, function() {
+		  console.log('%s listening at %s', server.name, server.url);
+		});
+	```
+
 ## Developing Locally
 
 1. Specify you project-id and key either through environment variables or through the application interface:
@@ -179,29 +226,28 @@ applications running in almost any environment. Here's an introductory video:
 	* Via environment variables:
 
 		```bash
-		 	> export GLCOUD_PROJECT=<YOUR_PROJECT_ID>
+			> export GLCOUD_PROJECT=<YOUR_PROJECT_ID>
 
-		 	> export GOOGLE_APPLICATION_CREDENTIALS=<path/to/your/keyfile.json>
+			> export GOOGLE_APPLICATION_CREDENTIALS=<path/to/your/keyfile.json>
 
-		 	> node myApp.js
+			> node myApp.js
 		```
 
 	* Via the javascript interface:
 
-	   ```JS
-	   		var errorHandler = require('@google/cloud-error-handler)({
-				projectId: 'your-project-id',
-				key: 'your-api-key'
-			});
-
-	   	```
+		```JS
+		var errorHandler = require('@google/cloud-errors')({
+			projectId: 'your-project-id',
+			key: 'your-api-key'
+		});
+		```
 
 ## Developing the library
 
 Install the dependencies:
 
 ```bash
-> npm install
+npm install
 ```
 
 Add your unit tests to:
@@ -213,17 +259,26 @@ tests/unit/
 Run the test suite:
 
 ```bash
-> npm test
+npm test
 ```
 
 Run the coverage suite (will also run the test suite):
 
 ```bash
-> npm run-script coverage
+npm run-script coverage
 ```
 
 Run the style checking suite:
 
 ```bash
-> npm run-script style
+npm run-script style
 ```
+
+Pre-commit, run the Pre-commit hook to run Clang Formatter *(Must have Clang
+	Formatter installed prior to use)*
+
+```bash
+git commit
+```
+
+*Then commit your changes and make a pull-request*

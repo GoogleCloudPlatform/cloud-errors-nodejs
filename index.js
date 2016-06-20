@@ -17,9 +17,11 @@
 var gatherConfiguration = require('./lib/configuration.js');
 var AuthClient = require('./lib/google-apis/auth-client.js');
 // Begin error reporting interfaces
+var koa = require('./lib/interfaces/koa.js');
 var hapi = require('./lib/interfaces/hapi.js');
 var manual = require('./lib/interfaces/manual.js');
 var express = require('./lib/interfaces/express.js');
+var restify = require('./lib/interfaces/restify');
 var uncaughtException = require('./lib/interfaces/uncaught.js');
 
 /**
@@ -73,9 +75,11 @@ function initializeClientAndInterfaces ( initConfiguration ) {
 
   // Return the application interfaces for use by the hosting application
   return {
+    koa: koa(client, config),
     hapi: hapi(client, config),
     report: manual(client, config),
-    express: express(client, config)
+    express: express(client, config),
+    restify: restify(client, config)
   };
 }
 

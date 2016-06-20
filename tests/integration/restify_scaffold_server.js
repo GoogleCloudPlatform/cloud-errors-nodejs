@@ -13,5 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-'use strict';
-module.exports = process.env;
+
+function respond(req, res, next) {
+  next(new Error('this is a restify error'));
+}
+
+var restify = require('restify');
+var errorHandler = require('../../index.js')();
+
+var server = restify.createServer();
+
+server.use(errorHandler.restify(server));
+server.get('/hello/:name', respond);
+server.head('/hello/:name', respond);
+
+server.listen(8080, function() {
+  console.log('%s listening at %s', server.name, server.url);
+});

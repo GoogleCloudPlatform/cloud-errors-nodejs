@@ -1,5 +1,5 @@
 {
-  "name": "error_middleware_stackdriver",
+  "name": "@google/cloud-errors",
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
@@ -23,6 +23,8 @@
     "istanbul": "^0.4.3",
     "jsdoc": "git+https://github.com/jsdoc3/jsdoc.git",
     "jshint": "^2.9.2",
+    "koa": "^1.2.0",
+    "restify": "^4.1.0",
     "tape": "^4.5.1"
   },
   "dependencies": {
