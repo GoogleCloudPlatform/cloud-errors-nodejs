@@ -15,10 +15,7 @@
  */
 var express = require('express');
 var app = express();
-var errorHandler = require('../../index.js')({
-  projectId: "ccavalli-test-debug-external"
-  , onUncaughtException: 'report'
-});
+var errorHandler = require('../../index.js')();
 var bodyParser = require('body-parser');
 
 app.use(bodyParser.json());
@@ -55,7 +52,7 @@ function reportManualError ( ) {
     , null
     , null
     , function ( ) {
-      
+
       throwUncaughtError();
     }
   );

@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 var hapi = require('hapi');
-var errorHandler = require('../../index.js')({
-  projectId: "ccavalli-test-debug-external"
-});
+var errorHandler = require('../../index.js')();
 
 var server = new hapi.Server();
 server.connection({ port: 3000 });
