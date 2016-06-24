@@ -77,14 +77,14 @@ test(
     delete process.env.GCLOUD_PROJECT;
     t.deepEqual(
       configuration()
-      , {projectId: null, onUncaughtException: "report",
+      , {projectId: null, onUncaughtException: "ignore",
         serviceContext: {service: '', version: ''}, key: null, shouldReportErrorsToAPI: false, version: version}
       , "Given no configuration the return value should return a default value"
     );
 
     t.deepEqual(
       configuration({projectId: "a-project-id"})
-      , {projectId: "a-project-id", onUncaughtException: "report",
+      , {projectId: "a-project-id", onUncaughtException: "ignore",
         serviceContext: {service: '', version: ''}, key: null, shouldReportErrorsToAPI: false, version: version}
       , "Given a valid project id the configuration the return value should assimilate this value"
     );
@@ -125,20 +125,20 @@ test(
     process.env.GAE_MODULE_VERSION = 'test_version';
     t.deepEqual(
       configuration()
-      , {projectId: null, key: null, onUncaughtException: 'report', serviceContext: {service: 'test_name', version: 'test_version'}, shouldReportErrorsToAPI: false, version: version}
+      , {projectId: null, key: null, onUncaughtException: 'ignore', serviceContext: {service: 'test_name', version: 'test_version'}, shouldReportErrorsToAPI: false, version: version}
       , "Given that the GAE_MODULE_NAME and GAE_MODULE_VERSION env variables are set the returned configuration of serviceContext should reflect those values"
     );
 
     t.deepEqual(
       configuration({serviceContext: {service: 'another_name'}})
-      , {projectId: null, key: null, onUncaughtException: 'report', serviceContext: {service: 'another_name', version: 'test_version'}, shouldReportErrorsToAPI: false, version: version}
+      , {projectId: null, key: null, onUncaughtException: 'ignore', serviceContext: {service: 'another_name', version: 'test_version'}, shouldReportErrorsToAPI: false, version: version}
       , "Given that the GAE_MODULE_NAME and GAE_MODULE_VERSION env variables are set but the service property is given in the configuration"
         +"the returned configuration of serviceContext should reflect those values"
     );
 
     t.deepEqual(
       configuration({serviceContext: {version: 'another_version'}})
-      , {projectId: null, key: null, onUncaughtException: 'report', serviceContext: {service: 'test_name', version: 'another_version'}, shouldReportErrorsToAPI: false, version: version}
+      , {projectId: null, key: null, onUncaughtException: 'ignore', serviceContext: {service: 'test_name', version: 'another_version'}, shouldReportErrorsToAPI: false, version: version}
       , "Given that the GAE_MODULE_NAME and GAE_MODULE_VERSION env variables are set but the version property is given in the configuration"
         +"the returned configuration of serviceContext should reflect those values"
     );
@@ -147,7 +147,7 @@ test(
 
     t.deepEqual(
       configuration({serviceContext: {service: 'a_different_test_name', version: 'another_version'}})
-      , {projectId: null, key: null, onUncaughtException: 'report', serviceContext: {service: 'a_different_test_name', version: 'another_version'}, shouldReportErrorsToAPI: false, version: version}
+      , {projectId: null, key: null, onUncaughtException: 'ignore', serviceContext: {service: 'a_different_test_name', version: 'another_version'}, shouldReportErrorsToAPI: false, version: version}
       , "Given that the serviceContext service and version are given in the object configuration these values should be reflected in the configuration output."
     );
 

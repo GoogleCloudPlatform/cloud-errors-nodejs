@@ -13,9 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+var WARNING_HEADER = "\n!! -WARNING-";
+var EXCLAMATION_LN = "\n!!";
+var lodash = require('lodash');
+var has = lodash.has;
 var express = require('express');
 var app = express();
-var errorHandler = require('../../index.js')();
+var errorHandler = require('../../index.js')({
+  onUncaughtException: 'report'
+});
 var bodyParser = require('body-parser');
 
 app.use(bodyParser.json());
@@ -24,19 +31,56 @@ app.post(
   '/testErrorHandling'
   , function ( req, res, next ) {
 
-    if ( !req.body.hasOwnProperty('test')
-      || req.body.test !== true ) {
 
-        var err = new Error("Error on Express Integration Test Route");
-        res.send("Error");
-        res.end();
-        return next(err);
+    if ( has(req.body, 'test') && req.body.test !== true ) {
+      
+      return next(new Error("Error on Express Regular Error POST Route"));
     } else {
+
       res.send("Success");
       res.end();
     }
   }
 );
+
+app.get(
+  '/customError'
+  , function ( req, res, next ) {
+
+    errorHandler.report(
+      "Error on Express Custom Error GET Route"
+      , function ( err, res ) {
+
+        if ( err ) {
+
+          console.log(WARNING_HEADER);
+          console.log("Error in sending custom get error to api");
+          console.log(err);
+          console.log(EXCLAMATION_LN);
+        } else {
+
+          console.log(EXCLAMATION_LN);
+          console.log("Successfully sent custom get error to api");
+          console.log(res);
+          console.log(EXCLAMATION_LN);
+        }
+      }
+    );
+
+    res.send("Success");
+    res.end();
+
+    next();
+  }
+);
+
+app.get(
+  '/getError'
+  , function ( req, res, next ) {
+    
+    return next(new Error("Error on Express Regular Error GET Route"));
+  }
+)
 
 app.use(errorHandler.express);
 
@@ -51,9 +95,25 @@ function reportManualError ( ) {
     new Error("This is a manually reported error")
     , null
     , null
-    , function ( ) {
+    , function ( err, res ) {
 
-      throwUncaughtError();
+      if ( err ) {
+        
+        console.log(WARNING_HEADER);
+        console.log("Got an error in sending error information to the API");
+        console.log(err);
+        console.log(EXCLAMATION_LN);
+      } else {
+
+        console.log(EXCLAMATION_LN);
+        console.log("Successfully sent error information to the API");
+        console.log(res);
+        console.log(EXCLAMATION_LN);
+      }
+
+      if ( process.env.THROW_ON_STARTUP ) {
+        throwUncaughtError();
+      }
     }
   );
 }
