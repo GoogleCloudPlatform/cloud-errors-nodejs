@@ -17,6 +17,7 @@
 var test = require('tape');
 var expressRequestInformationExtractor = require('../../lib/request-extractors/express.js');
 var Fuzzer = require('../../utils/fuzzer.js');
+var _ = require('lodash');
 
 test(
   'Test request information extraction given invalid input'
@@ -118,7 +119,7 @@ test(
 
     var headerFactory = function ( toDeriveFrom ) {
 
-      var lrn = Object.assign({}, toDeriveFrom);
+      var lrn = _.assign({}, toDeriveFrom);
       lrn.header = function ( toRet ) {
 
         if (lrn.hasOwnProperty(toRet)) {
