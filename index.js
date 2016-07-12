@@ -43,10 +43,10 @@ var uncaughtException = require('./lib/interfaces/uncaught.js');
 /**
  * @typedef ApplicationErrorReportingInterface
  * @type Object
- * @property {Object} hapi - The hapi plugin for StackDriver Error Reporting
+ * @property {Object} hapi - The hapi plugin for Stackdriver Error Reporting
  * @property {Function} report - The manual interface to report Errors to the
- *  StackDriver Error Reporting Service
- * @property {Function} express - The express plugin for StackDriver Error
+ *  Stackdriver Error Reporting Service
+ * @property {Function} express - The express plugin for Stackdriver Error
  *  Reporting
  */
 

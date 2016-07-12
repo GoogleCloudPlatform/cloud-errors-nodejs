@@ -1,14 +1,14 @@
-# Node.JS Error Reporting Agent For StackDriver
+# Node.JS Error Reporting Agent For Stackdriver
 
 > **This is not an official Google product.** This module is experimental and may not be ready for use.
 > This module uses APIs that may be undocumented and are subject to change without notice.
 
-This modules provides StackDriver Error Reporting support for Node.JS applications.
-[StackDriver Error Reporting](https://cloud.google.com/error-reporting/) is a feature of
+This modules provides Stackdriver Error Reporting support for Node.JS applications.
+[Stackdriver Error Reporting](https://cloud.google.com/error-reporting/) is a feature of
 Google Cloud Platform that allows in-depth monitoring and viewing of errors reported by
 applications running in almost any environment. Here's an introductory video:
 
-[![Learn about Error Reporting in StackDriver](https://img.youtube.com/vi/AUW4ZEhhk_w/0.jpg)](https://youtu.be/AUW4ZEhhk_w?t=24m26s)
+[![Learn about Error Reporting in Stackdriver](https://img.youtube.com/vi/AUW4ZEhhk_w/0.jpg)](https://youtu.be/AUW4ZEhhk_w?t=24m26s)
 
 ## Prerequisites
 
@@ -35,7 +35,7 @@ applications running in almost any environment. Here's an introductory video:
 		projectId: 'my-project-id'
 	});
 
-	// Report an error to the StackDriver API
+	// Report an error to the Stackdriver API
 	errorHandler.report(
 		new Error('This is a test'),
 		(err, res) => {
@@ -49,7 +49,7 @@ applications running in almost any environment. Here's an introductory video:
 	);
 	```
 
-* **When initing the StackDriver Error reporting library you can specify several options**
+* **When initing the Stackdriver Error reporting library you can specify several options**
 
 	```JS
 	var errorHandler = require('@google/cloud-errors')({
