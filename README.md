@@ -49,7 +49,9 @@ applications running in almost any environment. Here's an introductory video:
 	);
 	```
 
-* **When initing the Stackdriver Error reporting library you can specify several options**
+## Setup
+
+When initing the Stackdriver Error reporting library you can specify several options
 
 	```JS
 	var errorHandler = require('@google/cloud-errors')({
@@ -63,17 +65,17 @@ applications running in almost any environment. Here's an introductory video:
 	});
 	```
 
-* **Configure the error handling library to handle uncaught exceptions in serveral different ways:**
+Configure the error handling library to handle uncaught exceptions in serveral different ways:
 
 	```JS
 	{  // Ignore all uncaught errors, this is the default behavior
 		onUncaughtException: 'ignore'
 	}
-
+	
 	{ // Report all uncaught errors and do not forcefully exit
 		onUncaughtException: 'report'
 	}
-
+	
 	{ // Report any uncaught error and then attempt to exit after
 		onUncaughtException: 'reportAndExit'
 	}
@@ -85,7 +87,7 @@ applications running in almost any environment. Here's an introductory video:
 > the Javascript interface or through the `GOOGLE_APPLICATION_CREDENTIALS` environment variable which
 > should contain a path to the keyfile while developing locally.
 
-* **Using Express?**
+### Using Express
 
 	```JS
 	var express = require('express');
@@ -123,7 +125,7 @@ applications running in almost any environment. Here's an introductory video:
 	);
 	```
 
-* **Or how about Hapi?**
+### Using Hapi
 
 	```JS
 	var hapi = require('hapi');
@@ -172,7 +174,7 @@ applications running in almost any environment. Here's an introductory video:
 	);
 	```
 
-* **Maybe Koa?**
+### Using Koa
 
 	```JS
 		var errorHandler = require('@google/cloud-errors')({
@@ -196,7 +198,7 @@ applications running in almost any environment. Here's an introductory video:
 		app.listen(3000);
 	```
 
-* **Perhaps Restify?**
+### Using Restify
 
 	```JS
 		function respond(req, res, next) {
