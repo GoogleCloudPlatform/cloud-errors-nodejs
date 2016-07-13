@@ -38,20 +38,20 @@ applications running in almost any environment. Here's an introductory video:
 
 4. **Instrument your application:**
 
-	```JS
-	// Require the library and initialize the error handler
-	var errorHandler = require('@google/cloud-errors')({
-		projectId: 'my-project-id',	// not needed on Google Cloud Platform
-		key: 'my-api-key',		// not needed on Google Cloud Platform
-		serviceContext: {		// not needed on Google App Engine
-			service: 'my-service',
-			version: 'alpha1'
-		}
-	});
+```JS
+// Require the library and initialize the error handler
+var errorHandler = require('@google/cloud-errors')({
+	projectId: 'my-project-id',	// not needed on Google Cloud Platform
+	key: 'my-api-key',		// not needed on Google Cloud Platform
+	serviceContext: {		// not needed on Google App Engine
+		service: 'my-service',
+		version: 'alpha1'
+	}
+});
 
-	// Report an error to the StackDriver API
-	errorHandler.report(new Error('This is a test'));
-	```
+// Report an error to the StackDriver API
+errorHandler.report(new Error('This is a test'));
+```
 
 5. **View reported errors:**
 
@@ -61,33 +61,33 @@ applications running in almost any environment. Here's an introductory video:
 
 When initing the Stackdriver Error reporting library you can specify several options
 
-	```JS
-	var errorHandler = require('@google/cloud-errors')({
-		projectId: 'my-project-id',
-		key: 'my-optional-api-key',
-		onUncaughtException: 'report',
-		serviceContext: {
-			service: 'my-service',
-			version: 'alpha1'
-		}
-	});
-	```
+```JS
+var errorHandler = require('@google/cloud-errors')({
+	projectId: 'my-project-id',
+	key: 'my-optional-api-key',
+	onUncaughtException: 'report',
+	serviceContext: {
+		service: 'my-service',
+		version: 'alpha1'
+	}
+});
+```
 
 Configure the error handling library to handle uncaught exceptions in serveral different ways:
 
-	```JS
-	{  // Ignore all uncaught errors, this is the default behavior
-		onUncaughtException: 'ignore'
-	}
-	
-	{ // Report all uncaught errors and do not forcefully exit
-		onUncaughtException: 'report'
-	}
-	
-	{ // Report any uncaught error and then attempt to exit after
-		onUncaughtException: 'reportAndExit'
-	}
-	```
+```JS
+{  // Ignore all uncaught errors, this is the default behavior
+	onUncaughtException: 'ignore'
+}
+
+{ // Report all uncaught errors and do not forcefully exit
+	onUncaughtException: 'report'
+}
+
+{ // Report any uncaught error and then attempt to exit after
+	onUncaughtException: 'reportAndExit'
+}
+```
 
 > All initialization arguments are optional but please be aware that to report errors to the service
 > one must specify a projectId either through the `GLCOUD_PROJECT` environment variable or through the
@@ -97,137 +97,137 @@ Configure the error handling library to handle uncaught exceptions in serveral d
 
 ### Using Express
 
-	```JS
-	var express = require('express');
-	var app = express();
-	var errorHandler = require('@google/cloud-errors')({
-	  projectId: "my-project-id"
-	});
+```JS
+var express = require('express');
+var app = express();
+var errorHandler = require('@google/cloud-errors')({
+  projectId: "my-project-id"
+});
 
-	app.get(
-	  '/errorRoute',
-	  function ( req, res, next ) {
-	    // You can push in errors manually
-	    res.send("Error");
-	    res.end();
-	    next(new Error("Got traffic on the errorRoute"));
-	  }
-	);
+app.get(
+  '/errorRoute',
+  function ( req, res, next ) {
+    // You can push in errors manually
+    res.send("Error");
+    res.end();
+    next(new Error("Got traffic on the errorRoute"));
+  }
+);
 
-	app.get(
-	  '/anotherRoute',
-	  function ( req, res, next ) {
-	    // It'll even log potentially unexpected errors
-	    JSON.parse("{\"malformedJson\": true");
-	  }
-	)
+app.get(
+  '/anotherRoute',
+  function ( req, res, next ) {
+    // It'll even log potentially unexpected errors
+    JSON.parse("{\"malformedJson\": true");
+  }
+)
 
-	// Just use the express plugin
-	app.use(errorHandler.express);
+// Just use the express plugin
+app.use(errorHandler.express);
 
-	app.listen(
-	  3000
-	  , function ( ) {
-	    console.log('Server has been started on port 3000');
-	  }
-	);
-	```
+app.listen(
+  3000
+  , function ( ) {
+    console.log('Server has been started on port 3000');
+  }
+);
+```
 
 ### Using Hapi
 
-	```JS
-	var hapi = require('hapi');
-	var errorHandler = require('@google/cloud-errors')({
-	  projectId: 'my-project-id'
-	});
+```JS
+var hapi = require('hapi');
+var errorHandler = require('@google/cloud-errors')({
+  projectId: 'my-project-id'
+});
 
-	var server = new hapi.Server();
-	server.connection({ port: 3000 });
+var server = new hapi.Server();
+server.connection({ port: 3000 });
 
-	server.start(
-	  ( err ) => {
+server.start(
+  ( err ) => {
 
-	    if ( err ) {
+    if ( err ) {
 
-	      throw err;
-	    }
+      throw err;
+    }
 
-	    console.log(
-	      'Server running at',
-	      server.info.uri
-	    );
-	  }
-	);
+    console.log(
+      'Server running at',
+      server.info.uri
+    );
+  }
+);
 
-	server.route({
-	  method: 'GET',
-	  path: '/errorRoute',
-	  handler: function ( request, reply ) {
+server.route({
+  method: 'GET',
+  path: '/errorRoute',
+  handler: function ( request, reply ) {
 
-	    throw new Error("an error");
-	    reply('Error');
-	  }
-	});
+    throw new Error("an error");
+    reply('Error');
+  }
+});
 
-	// Just add in the error handler to your app
-	server.register(
-	  { register: errorHandler.hapi },
-	  ( err ) => {
+// Just add in the error handler to your app
+server.register(
+  { register: errorHandler.hapi },
+  ( err ) => {
 
-	    if ( err ) {
+    if ( err ) {
 
-	      console.error("There was an error in registering the plugin", err);
-	    }
-	  }
-	);
-	```
+      console.error("There was an error in registering the plugin", err);
+    }
+  }
+);
+```
 
 ### Using Koa
 
-	```JS
-		var errorHandler = require('@google/cloud-errors')({
-			projectId: 'my-project-id'
-		});
-		var koa = require('koa');
-		var app = koa();
+```JS
+	var errorHandler = require('@google/cloud-errors')({
+		projectId: 'my-project-id'
+	});
+	var koa = require('koa');
+	var app = koa();
 
-		app.use(errorHandler.koa);
+	app.use(errorHandler.koa);
 
-		app.use(function *(next) {
-			//This will set status and message
-			this.throw('Error Message', 500);
-		});
+	app.use(function *(next) {
+		//This will set status and message
+		this.throw('Error Message', 500);
+	});
 
-		// response
-		app.use(function *(){
-			this.body = 'Hello World';
-		});
+	// response
+	app.use(function *(){
+		this.body = 'Hello World';
+	});
 
-		app.listen(3000);
-	```
+	app.listen(3000);
+```
 
 ### Using Restify
 
-	```JS
-		function respond(req, res, next) {
-		  next(new Error('this is a restify error'));
-		}
+```JS
+	function respond(req, res, next) {
+	  next(new Error('this is a restify error'));
+	}
 
-		var restify = require('restify');
-		var errorHandler = require('@google/cloud-errors')({
-			projectId: 'my-project-id'
-		});
+	var restify = require('restify');
+	var errorHandler = require('@google/cloud-errors')({
+		projectId: 'my-project-id'
+	});
 
-		var server = restify.createServer();
+	var server = restify.createServer();
 
-		server.use(errorHandler.restify(server));
-		server.get('/hello/:name', respond);
-		server.head('/hello/:name', respond);
+	server.use(errorHandler.restify(server));
+	server.get('/hello/:name', respond);
+	server.head('/hello/:name', respond);
 
-		server.listen(8080, function() {
-		  console.log('%s listening at %s', server.name, server.url);
-		});
-	```
+	server.listen(8080, function() {
+	  console.log('%s listening at %s', server.name, server.url);
+	});
+```
 
 ## Developing Locally
 
