@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/tape/bin/tape ./tests/unit/*.js",
+    "integration-tests": "./node_modules/tape/bin/tape ./tests/integration/*.js",
     "coverage": "./node_modules/istanbul/lib/cli.js cover -x \"fuzzer.js\" ./node_modules/tape/bin/tape ./tests/unit/*.js",
     "style": "./node_modules/jshint/bin/jshint lib index.js",
     "docs": "./node_modules/.bin/jsdoc -d docs index.js lib/"
@@ -24,6 +25,7 @@
     "jsdoc": "git+https://github.com/jsdoc3/jsdoc.git",
     "jshint": "^2.9.2",
     "koa": "^1.2.0",
+    "nock": "^8.0.0",
     "restify": "^4.1.0",
     "tape": "^4.5.1"
   },
