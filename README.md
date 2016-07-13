@@ -16,38 +16,46 @@ applications running in almost any environment. Here's an introductory video:
 
 ## Quickstart (Node.JS v4.x+)
 
-1. **Enable the Error Reporting API in your project:**
+1. **Enable the Error Reporting API for your project:**
 
-	* [You can find the Error Reporting API here](https://cloud.google.com/error-reporting/)
+  [Enable the Error Reporting API here](https://console.cloud.google.com/apis/api/clouderrorreporting.googleapis.com/overview)
 
-2. **In your project, on the command line:**
+2. **Create an API key:**
+
+  (This authentication step is not needed if you run on Google Cloud Platform)
+
+  Follow [these instructions](https://support.google.com/cloud/answer/6158857) to get an API key for your project.
+
+
+3. **Install the module:**
+
+  In your project, on the command line:
 
 	```shell
 	# Install through npm while saving to the local 'package.json'
 	npm install --save @google/cloud-errors
 	```
 
-3. **In your application:**
+4. **Instrument your application:**
 
 	```JS
-	// Require the library
+	// Require the library and initialize the error handler
 	var errorHandler = require('@google/cloud-errors')({
-		projectId: 'my-project-id'
+		projectId: 'my-project-id',	// not needed on Google Cloud Platform
+		key: 'my-api-key',		// not needed on Google Cloud Platform
+		serviceContext: {		// not needed on Google App Engine
+			service: 'my-service',
+			version: 'alpha1'
+		}
 	});
 
-	// Report an error to the Stackdriver API
-	errorHandler.report(
-		new Error('This is a test'),
-		(err, res) => {
-
-			if (err) {
-				console.log('Error was unable to be reported', err);
-			} else {
-				console.log('Error reported!', res);
-			}
-		}
-	);
+	// Report an error to the StackDriver API
+	errorHandler.report(new Error('This is a test'));
 	```
+
+5. **View reported errors:**
+
+  Open Stackdriver Error Reporting at https://console.cloud.google.com/errors to view the reported errors. 
 
 ## Setup
 
