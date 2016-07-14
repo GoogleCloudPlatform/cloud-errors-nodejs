@@ -10,7 +10,7 @@ This modules provides Stackdriver Error Reporting support for Node.JS applicatio
 Google Cloud Platform that allows in-depth monitoring and viewing of errors reported by
 applications running in almost any environment. Here's an introductory video:
 
-[![Learn about Error Reporting in Stackdriver](https://img.youtube.com/vi/AUW4ZEhhk_w/0.jpg)](https://youtu.be/AUW4ZEhhk_w?t=24m26s)
+[![Learn about Error Reporting in Stackdriver](https://img.youtube.com/vi/cVpWVD75Hs8/0.jpg)](https://www.youtube.com/watch?v=cVpWVD75Hs8)
 
 ## Prerequisites
 
