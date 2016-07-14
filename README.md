@@ -40,20 +40,20 @@ applications running in almost any environment. Here's an introductory video:
 
 4. **Instrument your application:**
 
-```JS
-// Require the library and initialize the error handler
-var errorHandler = require('@google/cloud-errors')({
-	projectId: 'my-project-id',	// not needed on Google Cloud Platform
-	key: 'my-api-key',		// not needed on Google Cloud Platform
-	serviceContext: {		// not needed on Google App Engine
-		service: 'my-service',
-		version: 'alpha1'
-	}
-});
-
-// Report an error to the StackDriver API
-errorHandler.report(new Error('This is a test'));
-```
+	```JS
+	// Require the library and initialize the error handler
+	var errorHandler = require('@google/cloud-errors')({
+		projectId: 'my-project-id',	// not needed on Google Cloud Platform
+		key: 'my-api-key',		// not needed on Google Cloud Platform
+		serviceContext: {		// not needed on Google App Engine
+			service: 'my-service',
+			version: 'alpha1'
+		}
+	});
+	
+	// Report an error to the StackDriver API
+	errorHandler.report(new Error('This is a test'));
+	```
 
 5. **View reported errors:**
 
