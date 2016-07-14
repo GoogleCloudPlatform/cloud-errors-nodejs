@@ -61,7 +61,7 @@ applications running in almost any environment. Here's an introductory video:
 
 ## Setup
 
-When initing the Stackdriver Error reporting library you can specify several options
+When initing the Stackdriver Error Reporting library you can specify several options
 
 ```JS
 var errorHandler = require('@google/cloud-errors')({
