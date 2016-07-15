@@ -1,11 +1,11 @@
-# Node.JS module for Stackdriver Error Reporting
+# Node.js module for Stackdriver Error Reporting
 
 [![Coverage Status](https://coveralls.io/repos/github/GoogleCloudPlatform/cloud-errors-nodejs/badge.svg?branch=coveralls)](https://coveralls.io/github/GoogleCloudPlatform/cloud-errors-nodejs?branch=coveralls)
 
 > **This is not an official Google product.** This module is experimental and may not be ready for use.
 > This module uses APIs that may be undocumented and are subject to change without notice.
 
-This modules provides Stackdriver Error Reporting support for Node.JS applications.
+This modules provides Stackdriver Error Reporting support for Node.js applications.
 [Stackdriver Error Reporting](https://cloud.google.com/error-reporting/) is a feature of
 Google Cloud Platform that allows in-depth monitoring and viewing of errors reported by
 applications running in almost any environment. Here's an introductory video:
@@ -14,12 +14,12 @@ applications running in almost any environment. Here's an introductory video:
 
 ## Prerequisites
 
-1. Your application needs to use Node.JS version 0.12 or greater. Node.JS v5+ is recommended.
+1. Your application needs to use Node.js version 0.12 or greater. Node.js v5+ is recommended.
 1. You need a [Google Cloud project](https://console.cloud.google.com). Your application can run anywhere, but errors are reported to a particular project.
 1. [Enable the Stackdriver Error Reporting API](https://console.cloud.google.com/apis/api/clouderrorreporting.googleapis.com/overview) for your project.
 1. The module will only send errors when the `NODE_ENV` environment variable is set to `production`.
 
-## Quickstart (Node.JS v4.x+)
+## Quickstart (Node.js v4.x+)
 
 1. **Create an API key:**
 
