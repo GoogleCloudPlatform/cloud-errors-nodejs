@@ -28,7 +28,7 @@ applications running in almost any environment. Here's an introductory video:
 
   (This authentication step is not needed if you run on Google Cloud Platform)
 
-  Follow [these instructions](https://support.google.com/cloud/answer/6158857) to get an API key for your project.
+  Follow [these instructions](https://support.google.com/cloud/answer/6158862) to get an API key for your project.
 
 
 3. **Install the module:**
