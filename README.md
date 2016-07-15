@@ -14,24 +14,20 @@ applications running in almost any environment. Here's an introductory video:
 
 ## Prerequisites
 
-* Your application will need to be using Node.JS version 0.12 or greater. Node.JS v5+ is recommended.
-
-* The module will only send errors when the `NODE_ENV` environment variable is set to `production`.
+1. Your application needs to use Node.JS version 0.12 or greater. Node.JS v5+ is recommended.
+1. You need a [Google Cloud project](https://console.cloud.google.com). Your application can run anywhere, but errors are reported to a particular project.
+1. [Enable the Stackdriver Error Reporting API](https://console.cloud.google.com/apis/api/clouderrorreporting.googleapis.com/overview) for your project.
+1. The module will only send errors when the `NODE_ENV` environment variable is set to `production`.
 
 ## Quickstart (Node.JS v4.x+)
 
-1. **Enable the Error Reporting API for your project:**
-
-  [Enable the Error Reporting API here](https://console.cloud.google.com/apis/api/clouderrorreporting.googleapis.com/overview)
-
-2. **Create an API key:**
+1. **Create an API key:**
 
   (This authentication step is not needed if you run on Google Cloud Platform)
 
   Follow [these instructions](https://support.google.com/cloud/answer/6158862) to get an API key for your project.
 
-
-3. **Install the module:**
+1. **Install the module:**
 
   In your project, on the command line:
 
@@ -39,8 +35,7 @@ applications running in almost any environment. Here's an introductory video:
 	# Install through npm while saving to the local 'package.json'
 	npm install --save @google/cloud-errors
 	```
-
-4. **Instrument your application:**
+1. **Instrument your application:**
 
 	```JS
 	// Require the library and initialize the error handler
@@ -57,7 +52,7 @@ applications running in almost any environment. Here's an introductory video:
 	errorHandler.report(new Error('This is a test'));
 	```
 
-5. **View reported errors:**
+1. **View reported errors:**
 
   Open Stackdriver Error Reporting at https://console.cloud.google.com/errors to view the reported errors. 
 
