@@ -48,7 +48,7 @@ applications running in almost any environment. Here's an introductory video:
 		}
 	});
 	
-	// Report an error to the StackDriver API
+	// Report an error to the Stackdriver API
 	errorHandler.report(new Error('This is a test'));
 	```
 
