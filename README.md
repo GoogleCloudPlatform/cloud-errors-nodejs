@@ -14,7 +14,7 @@ applications running in almost any environment. Here's an introductory video:
 
 ## Prerequisites
 
-1. Your application needs to use Node.js version 0.12 or greater. Node.js v5+ is recommended.
+1. Your application needs to use Node.js version 0.12 or greater.
 1. You need a [Google Cloud project](https://console.cloud.google.com). Your application can run anywhere, but errors are reported to a particular project.
 1. [Enable the Stackdriver Error Reporting API](https://console.cloud.google.com/apis/api/clouderrorreporting.googleapis.com/overview) for your project.
 1. The module will only send errors when the `NODE_ENV` environment variable is set to `production`.
