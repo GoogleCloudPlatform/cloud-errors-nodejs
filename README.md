@@ -58,50 +58,33 @@ applications running in almost any environment. Here's an introductory video:
 
 ## Setup
 
-When initing the Stackdriver Error Reporting library you can specify several options
+When initing the Stackdriver Error Reporting library you must specify the following:
+
+* **Authentication**: either using a path to your keyfile in the `GOOGLE_APPLICATION_CREDENTIALS` environment variable, or using a path to your keyfile in the `keyFilename` argument or using an API key string in the `key` argument.
+* **projectId**: either using the `GLCOUD_PROJECT` environment variable or the `projectId` argument.
+* **service**: either using the `GAE_MODULE_NAME`  environment variable or the `serviceContext.service` argument.
+
+On Google App Engine, these environment variables are already set.
 
 ```JS
 var errorHandler = require('@google/cloud-errors')({
 	projectId: 'my-project-id',
-	key: 'my-optional-api-key',
-	onUncaughtException: 'report',
+	key: 'my-api-key',
+	keyFilename: 'path-to-my-keyfile'
+	onUncaughtException: 'report', // or 'ignore' or 'reportAndExit'
 	serviceContext: {
 		service: 'my-service',
-		version: 'alpha1'
+		version: 'my-service-version'
 	}
 });
 ```
-
-Configure the error handling library to handle uncaught exceptions in serveral different ways:
-
-```JS
-{  // Ignore all uncaught errors, this is the default behavior
-	onUncaughtException: 'ignore'
-}
-
-{ // Report all uncaught errors and do not forcefully exit
-	onUncaughtException: 'report'
-}
-
-{ // Report any uncaught error and then attempt to exit after
-	onUncaughtException: 'reportAndExit'
-}
-```
-
-> All initialization arguments are optional but please be aware that to report errors to the service
-> one must specify a projectId either through the `GLCOUD_PROJECT` environment variable or through the
-> Javascript interface while developing locally. One must also specify a key through
-> the Javascript interface or through the `GOOGLE_APPLICATION_CREDENTIALS` environment variable which
-> should contain a path to the keyfile while developing locally.
 
 ### Using Express
 
 ```JS
 var express = require('express');
 var app = express();
-var errorHandler = require('@google/cloud-errors')({
-  projectId: "my-project-id"
-});
+var errorHandler = require('@google/cloud-errors')();
 
 app.get(
   '/errorRoute',
@@ -136,9 +119,7 @@ app.listen(
 
 ```JS
 var hapi = require('hapi');
-var errorHandler = require('@google/cloud-errors')({
-  projectId: 'my-project-id'
-});
+var errorHandler = require('@google/cloud-errors')();
 
 var server = new hapi.Server();
 server.connection({ port: 3000 });
@@ -184,9 +165,7 @@ server.register(
 ### Using Koa
 
 ```JS
-	var errorHandler = require('@google/cloud-errors')({
-		projectId: 'my-project-id'
-	});
+	var errorHandler = require('@google/cloud-errors')();
 	var koa = require('koa');
 	var app = koa();
 
@@ -213,9 +192,7 @@ server.register(
 	}
 
 	var restify = require('restify');
-	var errorHandler = require('@google/cloud-errors')({
-		projectId: 'my-project-id'
-	});
+	var errorHandler = require('@google/cloud-errors')();
 
 	var server = restify.createServer();
 
