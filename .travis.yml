@@ -1,12 +1,22 @@
 sudo: false
-
 language: node_js
-
+before_install:
+- mkdir ./tests/configuration
+- ls ./tests
+- 'if [ "$TRAVIS_TRUSTED_INTERNAL_MERGE" = "true" ]; then openssl aes-256-cbc -K $encrypted_7e22a7c28f69_key -iv $encrypted_7e22a7c28f69_iv -in config.tar.enc -out ./tests/configuration/config.tar -d && tar xvf tests/configuration/config.tar; fi'
+- export GCLOUD_PROJECT=`cat tests/configuration/stub_project_id.txt`
+- export STUBBED_API_KEY=`cat tests/configuration/stub_api_key.txt`
+- export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/tests/configuration/stub_default_credentials.json
 node_js:
-  - "0.12"
-  - "4"
-  - "5"
-  - "6"
-  
+- '0.12'
+- '4'
+- '5'
+- '6'
 script:
-  - npm run-script coveralls
+- 'if [ "$TRAVIS_TRUSTED_INTERNAL_MERGE" = "true" ]; then npm run-script coveralls; fi'
+- 'if [ "$TRAVIS_TRUSTED_INTERNAL_MERGE" = "" ]; then npm run-script coveralls-external; fi'
+after_script:
+- export GOOGLE_APPLICATION_CREDENTIALS=null
+- export STUBBED_API_KEY=null
+- export GCLOUD_PROJECT=null
+- rm -rf tests/configuration

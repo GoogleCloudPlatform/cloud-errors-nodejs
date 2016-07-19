@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+delete process.env.GCLOUD_PROJECT;
+
+console.log("HERE ARE THE CREDENTAILS", process.env.GOOGLE_APPLICATION_CREDENTIALS, process.env.GCLOUD_PROJECT);
 var WARNING_HEADER = "\n!! -WARNING-";
 var EXCLAMATION_LN = "\n!!";
 var lodash = require('lodash');
@@ -21,7 +25,9 @@ var has = lodash.has;
 var express = require('express');
 var app = express();
 var errorHandler = require('../../index.js')({
-  onUncaughtException: 'report'
+  onUncaughtException: 'report',
+  key: process.env.STUBBED_API_KEY,
+  projectId: 'ccavalli-test-debug-external'
 });
 var bodyParser = require('body-parser');
 
@@ -117,6 +123,18 @@ function reportManualError ( ) {
     }
   );
 }
+console.log("reporting a manual error first");
+errorHandler.report(
+    new Error('This is a test'),
+    (err, res) => {
+        console.log("reported first manual error");
+        if (err) {
+            console.log('Error was unable to be reported', err);
+        } else {
+            console.log('Error reported!', res);
+        }
+    }
+);
 
 app.listen(
   3000
