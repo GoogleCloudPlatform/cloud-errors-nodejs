@@ -19,13 +19,7 @@ applications running in almost any environment. Here's an introductory video:
 1. [Enable the Stackdriver Error Reporting API](https://console.cloud.google.com/apis/api/clouderrorreporting.googleapis.com/overview) for your project.
 1. The module will only send errors when the `NODE_ENV` environment variable is set to `production`.
 
-## Quickstart (Node.js v4.x+)
-
-1. **Create an API key:**
-
-  (This authentication step is not needed if you run on Google Cloud Platform)
-
-  Follow [these instructions](https://support.google.com/cloud/answer/6158862) to get an API key for your project.
+## Quickstart on Google Cloud Platform
 
 1. **Install the module:**
 
@@ -40,16 +34,11 @@ applications running in almost any environment. Here's an introductory video:
 	```JS
 	// Require the library and initialize the error handler
 	var errorHandler = require('@google/cloud-errors')({
-		projectId: 'my-project-id',	// not needed on Google Cloud Platform
-		key: 'my-api-key',		// not needed on Google Cloud Platform
-		serviceContext: {		// not needed on Google App Engine
-			service: 'my-service',
-			version: 'alpha1'
-		}
+		serviceContext: {service: 'my-service'}	// not needed on Google App Engine
 	});
 	
-	// Report an error to the Stackdriver API
-	errorHandler.report(new Error('This is a test'));
+	// Report an error to the Stackdriver Error Reporting API
+	errorHandler.report('Somethign broke!');
 	```
 
 1. **View reported errors:**
@@ -60,7 +49,7 @@ applications running in almost any environment. Here's an introductory video:
 
 When initing the Stackdriver Error Reporting library you must specify the following:
 
-* **Authentication**: either using a path to your keyfile in the `GOOGLE_APPLICATION_CREDENTIALS` environment variable, or using a path to your keyfile in the `keyFilename` argument or using an API key string in the `key` argument.
+* **Authentication**: either using a path to your keyfile in the `GOOGLE_APPLICATION_CREDENTIALS` environment variable, or using a path to your keyfile in the `keyFilename` argument or using an [API key](https://support.google.com/cloud/answer/6158862) string in the `key` argument.
 * **projectId**: either using the `GLCOUD_PROJECT` environment variable or the `projectId` argument.
 * **service**: either using the `GAE_MODULE_NAME`  environment variable or the `serviceContext.service` argument.
 
