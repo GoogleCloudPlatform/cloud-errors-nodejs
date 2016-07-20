@@ -1,6 +1,8 @@
 # Node.js module for Stackdriver Error Reporting
 
+[![Build Status](https://travis-ci.org/GoogleCloudPlatform/cloud-errors-nodejs.svg?branch=master)](https://travis-ci.org/GoogleCloudPlatform/cloud-errors-nodejs)
 [![Coverage Status](https://coveralls.io/repos/github/GoogleCloudPlatform/cloud-errors-nodejs/badge.svg?branch=coveralls)](https://coveralls.io/github/GoogleCloudPlatform/cloud-errors-nodejs?branch=coveralls)
+[![Dependencies](https://david-dm.org/GoogleCloudPlatform/cloud-errors-nodejs.svg)](https://david-dm.org/GoogleCloudPlatform/cloud-errors-nodejs)
 
 > **This is not an official Google product.** This module is experimental and may not be ready for use.
 > This module uses APIs that may be undocumented and are subject to change without notice.
