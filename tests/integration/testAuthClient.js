@@ -95,11 +95,11 @@ test('Given invalid input but a repeatable error response the client should retr
       .setMessage(er.stack);
     var s = nock(
       'https://clouderrorreporting.googleapis.com/v1beta1/projects/'+
-        process.env.GCLOUD_PROJECT 
+        process.env.GCLOUD_PROJECT
     ).persist().post('/events:report').reply(429, function () {
       tries += 1;
       t.comment('Mock Server Received Request: '+tries+'/'+intendedTries);
-      return {error: 'Please try again later'}; 
+      return {error: 'Please try again later'};
     });
     client.sendError(em, function (error, response, body) {
       t.equal(
@@ -122,8 +122,8 @@ test('Not giving a callback function should still allow the actual request to ex
       .setMessage(er.stack);
     var s = nock(
       'https://clouderrorreporting.googleapis.com/v1beta1/projects/'+
-        process.env.GCLOUD_PROJECT 
-    ).persist().post('/events:report').reply(200, function () {      
+        process.env.GCLOUD_PROJECT
+    ).persist().post('/events:report').reply(200, function () {
       tries += 1;
       t.pass('Mock Server Received Request');
       nock.cleanAll();
@@ -175,7 +175,7 @@ test(
       .setMessage(er.stack);
     var s = nock(
       'https://clouderrorreporting.googleapis.com/v1beta1/projects/' +
-       process.env.GCLOUD_PROJECT 
+       process.env.GCLOUD_PROJECT
     ).persist().post('/events:report?key='+key).reply(200, function (uri) {
       t.deepEqual(
         uri.split("key=")[1],
@@ -273,5 +273,34 @@ test(
       );
       t.end();
     });
+  }
+);
+
+// TODO: need tests to ensure that the metadata service is always queried
+// The protocol for the projectId should be:
+// - first check the metadata service;
+// - on failure, check the GCLOUD_PROJECT env var
+// - if not set, check the config
+// - no projectId is available, report error in the sendError callbacks
+test(
+  'When no projectId is available the client should attempt to request it ' +
+  'from the metadata service.',
+  function (t) {
+    delete process.env.GCLOUD_PROJECT;
+    var client = new RequestHandler(null, true);
+    t.ok(client, 'should be able to construct a client');
+    var metadata = nock('http://metadata.google.internal/computeMetadata/v1')
+      .get('/project/numeric-project-id')
+      .reply(200, '101');
+    var s =
+      nock('https://clouderrorreporting.googleapis.com/v1beta1/projects/101')
+      .post('/events:report').reply(200, function() {
+        t.pass('Mock server received request for project queried from metadata');
+        t.end();
+        return {};
+      });
+
+    var er = new Error('_@google_STACKDRIVER_INTEGRATION_TEST_API_KEY_ERROR__');
+    client.sendError(er);
   }
 );
