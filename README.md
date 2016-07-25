@@ -77,33 +77,18 @@ var express = require('express');
 var app = express();
 var errorHandler = require('@google/cloud-errors')();
 
-app.get(
-  '/errorRoute',
-  function ( req, res, next ) {
-    // You can push in errors manually
-    res.send("Error");
-    res.end();
-    next(new Error("Got traffic on the errorRoute"));
-  }
-);
+app.get('/error', function ( req, res, next ) {
+    res.send('Something broke!');
+    next(new Error('Custom error message'));
+});
 
-app.get(
-  '/anotherRoute',
-  function ( req, res, next ) {
-    // It'll even log potentially unexpected errors
-    JSON.parse("{\"malformedJson\": true");
-  }
-)
+app.get('/exception', function () {
+    JSON.parse('{\"malformedJson\": true');
+});
 
-// Just use the express plugin
 app.use(errorHandler.express);
 
-app.listen(
-  3000
-  , function ( ) {
-    console.log('Server has been started on port 3000');
-  }
-);
+app.listen(3000);
 ```
 
 ### Using Hapi
@@ -114,86 +99,59 @@ var errorHandler = require('@google/cloud-errors')();
 
 var server = new hapi.Server();
 server.connection({ port: 3000 });
-
-server.start(
-  ( err ) => {
-
-    if ( err ) {
-
-      throw err;
-    }
-
-    console.log(
-      'Server running at',
-      server.info.uri
-    );
-  }
-);
+server.start();
 
 server.route({
   method: 'GET',
-  path: '/errorRoute',
+  path: '/error',
   handler: function ( request, reply ) {
-
-    throw new Error("an error");
-    reply('Error');
+    throw new Error('Custom error message');
+    reply('Something broke!');
   }
 });
 
-// Just add in the error handler to your app
-server.register(
-  { register: errorHandler.hapi },
-  ( err ) => {
-
-    if ( err ) {
-
-      console.error("There was an error in registering the plugin", err);
-    }
-  }
-);
+server.register({ register: errorHandler.hapi });
 ```
 
 ### Using Koa
 
 ```JS
-	var errorHandler = require('@google/cloud-errors')();
-	var koa = require('koa');
-	var app = koa();
+var errorHandler = require('@google/cloud-errors')();
+var koa = require('koa');
+var app = koa();
 
-	app.use(errorHandler.koa);
+app.use(errorHandler.koa);
 
-	app.use(function *(next) {
-		//This will set status and message
-		this.throw('Error Message', 500);
-	});
+app.use(function *(next) {
+	//This will set status and message
+	this.throw('Error Message', 500);
+});
 
-	// response
-	app.use(function *(){
-		this.body = 'Hello World';
-	});
+// response
+app.use(function *(){
+	this.body = 'Hello World';
+});
 
-	app.listen(3000);
+app.listen(3000);
 ```
 
 ### Using Restify
 
 ```JS
-	function respond(req, res, next) {
-	  next(new Error('this is a restify error'));
-	}
+function respond(req, res, next) {
+  next(new Error('this is a restify error'));
+}
 
-	var restify = require('restify');
-	var errorHandler = require('@google/cloud-errors')();
+var restify = require('restify');
+var errorHandler = require('@google/cloud-errors')();
 
-	var server = restify.createServer();
+var server = restify.createServer();
 
-	server.use(errorHandler.restify(server));
-	server.get('/hello/:name', respond);
-	server.head('/hello/:name', respond);
+server.use(errorHandler.restify(server));
+server.get('/hello/:name', respond);
+server.head('/hello/:name', respond);
 
-	server.listen(8080, function() {
-	  console.log('%s listening at %s', server.name, server.url);
-	});
+server.listen(8080);
 ```
 
 ## Developing the library
