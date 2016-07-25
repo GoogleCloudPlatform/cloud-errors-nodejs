@@ -51,7 +51,10 @@ applications running in almost any environment. Here's an introductory video:
 
 When initing the Stackdriver Error Reporting library you must specify the following:
 
-* **Authentication**: either using a path to your keyfile in the `GOOGLE_APPLICATION_CREDENTIALS` environment variable, or using a path to your keyfile in the `keyFilename` argument or using an [API key](https://support.google.com/cloud/answer/6158862) string in the `key` argument.
+* **Authentication**: Use one of the following:
+  * **(recommended)** a path to your keyfile in the `GOOGLE_APPLICATION_CREDENTIALS` environment variable,
+  * a path to your keyfile in the `keyFilename` argument,
+  * an [API key](https://support.google.com/cloud/answer/6158862) string in the `key` argument.
 * **projectId**: either using the `GLCOUD_PROJECT` environment variable or the `projectId` argument.
 * **service**: either using the `GAE_MODULE_NAME`  environment variable or the `serviceContext.service` argument.
 
