@@ -65,7 +65,7 @@ var errorHandler = require('@google/cloud-errors')({
 	projectId: 'my-project-id',
 	key: 'my-api-key',
 	keyFilename: 'path-to-my-keyfile'
-	onUncaughtException: 'report', // or 'ignore' or 'reportAndExit'
+	reportUncaughtExceptions: false, // defaults to true.
 	serviceContext: {
 		service: 'my-service',
 		version: 'my-service-version'
