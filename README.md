@@ -40,7 +40,7 @@ applications running in almost any environment. Here's an introductory video:
 	});
 	
 	// Report an error to the Stackdriver Error Reporting API
-	errorHandler.report(new Error('Somethign broke!'));
+	errorHandler.report(new Error('Something broke!'));
 	```
 
 1. **View reported errors:**
