@@ -3,6 +3,7 @@
   "version": "0.0.3",
   "description": "Node.js module for Google Stackdriver Error Reporting",
   "main": "index.js",
+  "repository": "GoogleCloudPlatform/cloud-errors-nodejs",
   "scripts": {
     "test": "./node_modules/istanbul/lib/cli.js cover -x \"fuzzer.js\" ./node_modules/tape/bin/tape ./tests/unit/*.js",
     "integration-tests": "./node_modules/istanbul/lib/cli.js cover -x \"error-message.js\" ./node_modules/tape/bin/tape ./tests/integration/*.js",

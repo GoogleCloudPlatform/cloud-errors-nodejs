@@ -35,17 +35,17 @@ applications running in almost any environment. Here's an introductory video:
 
 	```JS
 	// Require the library and initialize the error handler
-	var errorHandler = require('@google/cloud-errors')({
+	var errors = require('@google/cloud-errors')({
 		serviceContext: {service: 'my-service'}	// not needed on Google App Engine
 	});
-	
+
 	// Report an error to the Stackdriver Error Reporting API
-	errorHandler.report(new Error('Something broke!'));
+	errors.report(new Error('Something broke!'));
 	```
 
 1. **View reported errors:**
 
-  Open Stackdriver Error Reporting at https://console.cloud.google.com/errors to view the reported errors. 
+  Open Stackdriver Error Reporting at https://console.cloud.google.com/errors to view the reported errors.
 
 ## Setup
 
@@ -61,7 +61,7 @@ When initing the Stackdriver Error Reporting library you must specify the follow
 On Google App Engine, these environment variables are already set.
 
 ```JS
-var errorHandler = require('@google/cloud-errors')({
+var errors = require('@google/cloud-errors')({
 	projectId: 'my-project-id',
 	key: 'my-api-key',
 	keyFilename: 'path-to-my-keyfile'
@@ -78,7 +78,7 @@ var errorHandler = require('@google/cloud-errors')({
 ```JS
 var express = require('express');
 var app = express();
-var errorHandler = require('@google/cloud-errors')();
+var errors = require('@google/cloud-errors')();
 
 app.get('/error', function ( req, res, next ) {
     res.send('Something broke!');
@@ -89,7 +89,7 @@ app.get('/exception', function () {
     JSON.parse('{\"malformedJson\": true');
 });
 
-app.use(errorHandler.express);
+app.use(errors.express);
 
 app.listen(3000);
 ```
@@ -98,7 +98,7 @@ app.listen(3000);
 
 ```JS
 var hapi = require('hapi');
-var errorHandler = require('@google/cloud-errors')();
+var errors = require('@google/cloud-errors')();
 
 var server = new hapi.Server();
 server.connection({ port: 3000 });
@@ -113,17 +113,17 @@ server.route({
   }
 });
 
-server.register({ register: errorHandler.hapi });
+server.register({ register: errors.hapi });
 ```
 
 ### Using Koa
 
 ```JS
-var errorHandler = require('@google/cloud-errors')();
+var errors = require('@google/cloud-errors')();
 var koa = require('koa');
 var app = koa();
 
-app.use(errorHandler.koa);
+app.use(errors.koa);
 
 app.use(function *(next) {
 	//This will set status and message
@@ -146,11 +146,11 @@ function respond(req, res, next) {
 }
 
 var restify = require('restify');
-var errorHandler = require('@google/cloud-errors')();
+var errors = require('@google/cloud-errors')();
 
 var server = restify.createServer();
 
-server.use(errorHandler.restify(server));
+server.use(errors.restify(server));
 server.get('/hello/:name', respond);
 server.head('/hello/:name', respond);
 
