@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 'use strict';
-var gatherConfiguration = require('./lib/configuration.js');
+var Configuration = require('./lib/configuration.js');
 var AuthClient = require('./lib/google-apis/auth-client.js');
 // Begin error reporting interfaces
 var koa = require('./lib/interfaces/koa.js');
@@ -64,11 +64,8 @@ var uncaughtException = require('./lib/interfaces/uncaught.js');
  */
 function initializeClientAndInterfaces ( initConfiguration ) {
 
-  var config = gatherConfiguration(initConfiguration);
-  var client = new AuthClient(
-    config.projectId,
-    config.shouldReportErrorsToAPI
-  );
+  var config = new Configuration(initConfiguration);
+  var client = new AuthClient(config);
 
   // Setup the uncaught exception handler
   uncaughtException(client, config);

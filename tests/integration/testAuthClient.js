@@ -19,6 +19,7 @@ var test = require('tape');
 var nock = require('nock');
 var RequestHandler = require('../../lib/google-apis/auth-client.js');
 var ErrorMessage = require('../../lib/classes/error-message.js');
+var Configuration = require('../../lib/configuration.js');
 var lodash = require('lodash');
 var isObject = lodash.isObject;
 var isString = lodash.isString;
@@ -26,10 +27,11 @@ var isEmpty = lodash.isEmpty;
 var has = lodash.has;
 var client;
 
+
 test(
   'Test given valid init parameters we should be able to create a client',
   function ( t ) {
-
+    var cfg  = new Configuration();
     if (!isString(process.env.GCLOUD_PROJECT)) {
       t.fail("The gcloud project id (GCLOUD_PROJECT) was not set as an env variable");
       t.end();
@@ -41,7 +43,7 @@ test(
     }
 
     try {
-      client = new RequestHandler(process.env.GCLOUD_PROJECT, true);
+      client = new RequestHandler(cfg);
     } catch (e) {
 
       t.fail("Could not init client:\n"+e);
@@ -169,7 +171,7 @@ test(
   'Given a key the client should include it as a url param on all requests',
   function (t) {
     var key = process.env.STUBBED_API_KEY
-    client = new RequestHandler(process.env.GCLOUD_PROJECT, true, key);
+    client = new RequestHandler(new Configuration({key: key}));
     var er = new Error("_@google_STACKDRIVER_INTEGRATION_TEST_ERROR__");
     var em = new ErrorMessage()
       .setMessage(er.stack);
@@ -225,7 +227,9 @@ test(
 test(
   'Given a configuration to not report errors the client should callback with an error',
   function (t) {
-    client = new RequestHandler(process.env.GCLOUD_PROJECT, false);
+    var old = process.env.NODE_ENV;
+    delete process.env.NODE_ENV;
+    client = new RequestHandler(new Configuration());
     client.sendError({}, function (err, response, body){
       t.assert(
         err instanceof Error,
@@ -245,6 +249,7 @@ test(
         null,
         "The response should be null"
       );
+      process.env.NODE_ENV = old;
       t.end();
     });
   }
@@ -253,54 +258,78 @@ test(
 test(
   'Given an invalid env configuration the client should move into the cannot init state',
   function (t) {
+    var old = process.env.GCLOUD_PROJECT;
+    delete process.env.GCLOUD_PROJECT;
     var er = new Error("_@google_STACKDRIVER_INTEGRATION_TEST_API_KEY_ERROR__");
     var em = new ErrorMessage()
       .setMessage(er.stack);
-    client = new RequestHandler("_invalid_", true);
+    var cfg = new Configuration();
+    client = new RequestHandler(cfg);
     client.sendError(em, function (err, response, body) {
       t.assert(
         err instanceof Error,
         "The error should be an instance of the Error class"
       );
-      t.assert(
-        isObject(response),
-        "The response should be of type object"
+      t.deepEqual(
+        response,
+        null,
+        "The response should be of type null"
       );
       t.deepEqual(
         body,
         null,
-        "The response body should be undefined"
+        "The response body should be of type null"
       );
       t.end();
     });
   }
 );
 
-// TODO: need tests to ensure that the metadata service is always queried
-// The protocol for the projectId should be:
-// - first check the metadata service;
-// - on failure, check the GCLOUD_PROJECT env var
-// - if not set, check the config
-// - no projectId is available, report error in the sendError callbacks
 test(
-  'When no projectId is available the client should attempt to request it ' +
-  'from the metadata service.',
-  function (t) {
+  'Test given valid init parameters we should be able to create a client using' +
+  ' project number',
+  function ( t ) {
+    var client;
+    var oldProject = process.env.GCLOUD_PROJECT;
+    var oldKey = process.env.STUBBED_API_KEY;
     delete process.env.GCLOUD_PROJECT;
-    var client = new RequestHandler(null, true);
-    t.ok(client, 'should be able to construct a client');
-    var metadata = nock('http://metadata.google.internal/computeMetadata/v1')
-      .get('/project/numeric-project-id')
-      .reply(200, '101');
-    var s =
-      nock('https://clouderrorreporting.googleapis.com/v1beta1/projects/101')
-      .post('/events:report').reply(200, function() {
-        t.pass('Mock server received request for project queried from metadata');
-        t.end();
-        return {};
-      });
+    delete process.env.STUBBED_API_KEY;
+     var cfg  = new Configuration({projectId: process.env.STUBBED_PROJECT_NUM});
 
-    var er = new Error('_@google_STACKDRIVER_INTEGRATION_TEST_API_KEY_ERROR__');
-    client.sendError(er);
+    try {
+      client = new RequestHandler(cfg);
+    } catch (e) {
+
+      t.fail("Could not init client:\n"+e);
+      t.end();
+      process.exit();
+    }
+   t.pass("Able to create client without throwing");
+    var er = new Error("_@google_STACKDRIVER_INTEGRATION_TEST_ERROR__");
+    var em = new ErrorMessage()
+      .setMessage(er.stack);
+    client.sendError(em, function (error, response, body) {
+      t.equal(
+        error,
+        null,
+        "The error should be null"
+      );
+      t.assert(
+        isObject(body),
+        "the body should be of type object"
+      );
+      t.assert(
+        isEmpty(body),
+        "the body should be an empty object"
+      );
+      t.equal(
+        response.statusCode,
+        200,
+        'The status code should be 200'
+      );
+      process.env.GCLOUD_PROJECT = oldProject;
+      process.env.STUBBED_API_KEY = oldKey;
+      t.end();
+    });
   }
 );

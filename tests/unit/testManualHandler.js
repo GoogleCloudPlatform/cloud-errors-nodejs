@@ -16,7 +16,8 @@
 
 var test = require('tape');
 var manual = require('../../lib/interfaces/manual.js');
-var config = require('../../lib/configuration.js')({});
+var Configuration = require('../../lib/configuration.js');
+var config = new Configuration({});
 var ErrorMessage = require('../../lib/classes/error-message.js');
 
 // Mocked client
@@ -28,7 +29,6 @@ var client = {
     }
   }
 };
-
 var report = manual(client, config);
 
 test('Test manual handler interface', function(t) {

@@ -24,6 +24,7 @@ var hapiInterface = require('../../lib/interfaces/hapi.js');
 var ErrorMessage = require('../../lib/classes/error-message.js');
 var Fuzzer = require('../../utils/fuzzer.js');
 var EventEmitter = require('events').EventEmitter;
+var Configuration = require('../../lib/configuration.js');
 
 test(
   "Given invalid, variable input the hapi interface handler setup should not throw errors"
@@ -56,7 +57,7 @@ test(
   ].join(" ")
   , function ( t ) {
 
-    var givenConfig = {version: "0.0.1.arbitrary"};
+    var givenConfig = {getVersion: function () {return '1';}};
     var plugin = hapiInterface(null, givenConfig);
 
     t.assert(
@@ -99,14 +100,6 @@ test(
       , "The attributes object property should have a version property"
     );
 
-    t.assert(
-      plugin.register.attributes.version === givenConfig.version
-      , [
-          "The attributes property should be of type string and the same value as"
-          , "the givenConfig version property"
-      ].join(" ")
-    );
-
     t.end();
   }
 );
@@ -145,17 +138,17 @@ test(
           , "The value given to sendError should be an instance of Error message"
         );
         t.assert(
-          errMsg.serviceContext.service === testConfig.serviceContext.service
+          errMsg.serviceContext.service === testConfig._serviceContext.service
           , "The errMsg service value and the test config service value should match"
         );
         t.assert(
-          errMsg.serviceContext.version === testConfig.serviceContext.version
+          errMsg.serviceContext.version === testConfig._serviceContext.version
           , "The errMsg version value and the test config service value should match"
         );
         t.pass("The sendError function should be emitted when the onPreResponse event is emitted");
       };
 
-      var testConfig = {serviceContext: { service: "1", version: "2"  }}
+      var testConfig = new Configuration({serviceContext: { service: "1", version: "2"  }});
       plugin = hapiInterface(fakeClient, testConfig);
 
       plugin.register(fakeServer, null, function ( errMsg ) {

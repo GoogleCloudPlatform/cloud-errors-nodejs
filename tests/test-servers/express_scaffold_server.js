@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-delete process.env.GCLOUD_PROJECT;
-
-console.log("HERE ARE THE CREDENTAILS", process.env.GOOGLE_APPLICATION_CREDENTIALS, process.env.GCLOUD_PROJECT);
 var WARNING_HEADER = "\n!! -WARNING-";
 var EXCLAMATION_LN = "\n!!";
 var lodash = require('lodash');
@@ -67,7 +63,6 @@ app.get(
 
           console.log(EXCLAMATION_LN);
           console.log("Successfully sent custom get error to api");
-          console.log(res);
           console.log(EXCLAMATION_LN);
         }
       }
@@ -113,7 +108,6 @@ function reportManualError ( ) {
 
         console.log(EXCLAMATION_LN);
         console.log("Successfully sent error information to the API");
-        console.log(res);
         console.log(EXCLAMATION_LN);
       }
 
@@ -131,7 +125,7 @@ errorHandler.report(
         if (err) {
             console.log('Error was unable to be reported', err);
         } else {
-            console.log('Error reported!', res);
+            console.log('Error reported!');
         }
     }
 );

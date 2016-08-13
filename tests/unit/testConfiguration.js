@@ -16,151 +16,334 @@
 
 'use strict';
 var test = require('tape');
-var configuration = require('../../lib/configuration.js');
+var lodash = require('lodash');
+var isNumber = lodash.isNumber;
+var Configuration = require('../../lib/configuration.js');
 var version = require('../../package.json').version;
+var Fuzzer = require('../../utils/fuzzer.js');
+var cd = require('@google/cloud-diagnostics-common');
+var level = process.env.GCLOUD_DEBUG_LOGLEVEL
+var logger = cd.logger.create(isNumber(level) ? level : 4);
+var nock = require('nock');
+var METADATA_URL = 'http://metadata.google.internal/computeMetadata/v1';
 
 test(
-  'Giving an invalid configuration to the configuration function should throw',
+  'Initing an instance of Configuration should return a Configuration instance',
   function (t) {
-
-    t.throws(
-      configuration.bind(null, 5),
-      undefined,
-      "Should throw an error when given a number"
+    var c;
+    var f = new Fuzzer();
+    var stubConfig = {test: true};
+    var oldEnv = process.env.NODE_ENV;
+    var oldProject = process.env.GCLOUD_PROJECT;
+    t.deepEqual(typeof Configuration, 'function');
+    f.fuzzFunctionForTypes(
+      function (givenConfigFuzz) {
+        c = new Configuration(givenConfigFuzz);
+        t.deepEqual(c._givenConfiguration, {}, 
+          "The _givenConfiguration property should remain null if given "+
+          "invalid input"
+        );
+      },
+      ["object"]
     );
-
-    t.throws(
-      configuration.bind(null, "test"),
-      undefined,
-      "Should throw an error when given a string"
+    process.env.NODE_ENV = 'development';
+    delete process.env.GCLOUD_PROJECT;
+    t.doesNotThrow(function () { 
+      c = new Configuration(stubConfig); 
+    });
+    t.deepEqual(c._givenConfiguration, stubConfig, 
+      "Given a valid configuration the instance should assign it as the value "+
+      "to the _givenConfiguration property"
     );
+    t.deepEqual(c._reportUncaughtExceptions, true);
+    t.deepEqual(c.getReportUncaughtExceptions(), true);
+    t.deepEqual(c._shouldReportErrorsToAPI, false, 
+      "_shouldReportErrorsToAPI should init to false if env !== production");
+    t.deepEqual(c.getShouldReportErrorsToAPI(), false);
+    t.deepEqual(c._projectId, null);
+    t.deepEqual(c._key, null);
+    t.deepEqual(c.getKey(), null);
+    t.deepEqual(c._serviceContext, {service: '', version: ''});
+    t.deepEqual(c.getServiceContext(), {service: '', version: ''});
+    t.deepEqual(c._version, version);
+    t.deepEqual(c.getVersion(), version);
+    c.getProjectId(function (err, id) {
+      t.assert(err instanceof Error);
+      t.deepEqual(id, null);
+      process.env.NODE_ENV = 'production';
+      c = new Configuration();
+      t.deepEqual(c._shouldReportErrorsToAPI, true, 
+        "_shouldReportErrorsToAPI should init to true if env === production");
+      t.deepEqual(c.getShouldReportErrorsToAPI(), true);
+      process.env.NODE_ENV = oldEnv;
+      process.env.GCLOUD_PROJECT = oldProject;
+      t.end();
+    });
+    t.throws(c.getProjectId, undefined, 'Should throw not given a callback parameter');
+    t.throws(function () { new Configuration({reportUncaughtExceptions: 1}) },
+      'Should throw when not given a boolean for reportUncaughtExceptions');
+    t.throws(function () { new Configuration({key: null}) },
+      'Should throw when not given a string for reportUncaughtExceptions');
+    t.throws(function () { new Configuration({serviceContext: {service: false}}) },
+      'Should throw when not given a string for serviceContext.service');  
+    t.throws(function () { new Configuration({serviceContext: {version: true}}) },
+      'Should throw when not given a string for serviceContext.version');
+    t.doesNotThrow(function () { new Configuration({serviceContext: {}}) },
+      'Should not throw when given an empty object');
+  }
+);
 
-    t.throws(
-      configuration.bind(null, null),
-      undefined,
-      "Should throw an error when given null"
-    );
+test(
+  'Testing basic init process on a Configuration instance',
+  function (t) {
+    var oldProject = process.env.GCLOUD_PROJECT;
+    delete process.env.GCLOUD_PROJECT;
+    var s = nock(
+     'http://metadata.google.internal/computeMetadata/v1/project'
+    ).get('/project-id').times(1).reply(500);
+    var c = new Configuration();
+    c.getProjectId(function (err, id) {
+      t.assert(err instanceof Error);
+      t.deepEqual(id, null, 'The returned value for project number should be null');
+      s.done();
+      process.env.GCLOUD_PROJECT = oldProject;
+      t.end();
+    });
+  }
+);
 
-    t.throws(
-      configuration.bind(null, []),
-      undefined,
-      "Should throw an error when given an array"
-    );
+test(
+  'Testing local value assignment in init process on a Configuration instance '+
+  'for project number',
+  function (t) {
+    var oldProject = process.env.GCLOUD_PROJECT;
+    delete process.env.GCLOUD_PROJECT;
+    var projectNumber = 1234;
+    var c = new Configuration({projectId: projectNumber});
+    var s = nock(
+     'http://metadata.google.internal/computeMetadata/v1/project'
+    ).get('/project-id').times(1).reply(500);
+    c.getProjectId(function (err, id) {
+      t.deepEqual(err, null);
+      t.deepEqual(id, projectNumber.toString());
+      s.done();
+      process.env.GCLOUD_PROJECT = oldProject;
+      t.end();
+    });
+  }
+);
 
-    t.throws(
-      configuration.bind(null, true),
-      undefined,
-      "Should throw an error when given a boolean"
-    );
+test(
+  'Testing local value assignment in init process on a Configuration instance '+
+  'for project number when invalid - should throw',
+  function (t) {
+    var oldProject = process.env.GCLOUD_PROJECT;
+    delete process.env.GCLOUD_PROJECT;
+    var projectNumber = null;
+    var c = new Configuration({projectId: projectNumber});
+    var s = nock(
+     'http://metadata.google.internal/computeMetadata/v1/project'
+    ).get('/project-id').times(1).reply(500);
+    c.getProjectId(function (err, id) {
+      t.assert(err instanceof Error);
+      t.deepEqual(id, null);
+      s.done();
+      process.env.GCLOUD_PROJECT = oldProject;
+      t.end();
+    });
+  }
+);
 
-    t.doesNotThrow(
-      configuration.bind(null, {}),
-      undefined,
-      "Should not throw an error if given an object"
-    );
+test(
+  'Testing local value assignment in init process on a Configuration instance '+
+  'for project number as string',
+  function (t) {
+    var oldProject = process.env.GCLOUD_PROJECT;
+    delete process.env.GCLOUD_PROJECT;
+    var projectNumber = '1234';
+    var c = new Configuration({projectId: projectNumber});
+    var s = nock(
+     'http://metadata.google.internal/computeMetadata/v1/project'
+    ).get('/project-id').times(1).reply(500);
+    c.getProjectId(function (err, id) {
+      t.deepEqual(null, err);
+      t.deepEqual(id, projectNumber);
+      s.done();
+      process.env.GCLOUD_PROJECT = oldProject;
+      t.end();
+    });
+  }
+);
 
-    t.doesNotThrow(
-      configuration,
-      undefined,
-      "Should not throw an error if given undefined"
-    );
+test(
+  'Testing basic init behaviours',
+  function (t) {
+    var c = new Configuration();
+    var pn = '123';
+    var pi = 'test';
+    c._projectId = pi;
+    c._checkLocalProjectId(function (err, id) {
+      t.deepEqual(err, null);
+      t.deepEqual(pi, id);
+    });
+    t.deepEqual(c._projectId, pi,
+      'The project id should not be reset by _checkLocalProjectId');
+    c.getProjectId(function (err, id) {
+      t.deepEqual(null, err);
+      t.deepEqual(id, pi,
+        'The project pi should not be reset by _checkLocalProjectNumber');
+      t.end();
+    });
+  }
+);
 
+test(
+  'Testing local value assignment in init process on a Configuration instance '+
+  'for project number in env variable',
+  function (t) {
+    var oldProject = process.env.GCLOUD_PROJECT;
+    var projectNumber = '1234';
+    process.env.GCLOUD_PROJECT = projectNumber;
+    var c = new Configuration();
+    var s = nock(
+     'http://metadata.google.internal/computeMetadata/v1/project'
+    ).get('/project-id').times(1).reply(500);
+    c.getProjectId(function (err, id) {
+      t.deepEqual(null, err);
+      t.deepEqual(id, projectNumber);
+      s.done();
+      process.env.GCLOUD_PROJECT = oldProject;
+      t.end();
+    });
+  }
+);
+
+test(
+  'Testing local value assignment in init process on a Configuration instance '+
+  'for project id',
+  function (t) {
+    var oldProject = process.env.GCLOUD_PROJECT;
+    delete process.env.GCLOUD_PROJECT;
+    var projectId = 'test-123';
+    var c = new Configuration({projectId: projectId});
+    var s = nock(
+     'http://metadata.google.internal/computeMetadata/v1/project'
+    ).get('/project-id').times(1).reply(500);
+    c.getProjectId(function (err, id) {
+      t.deepEqual(err, null);
+      t.deepEqual(id, projectId);
+      s.done();
+      process.env.GCLOUD_PROJECT = oldProject;
+      t.end();
+    });
+  }
+);
+
+test(
+  'Testing local value assignment in init process on a Configuration instance '+
+  'for project id in env variable',
+  function (t) {
+    var projectId = 'test-123';
+    var oldProject = process.env.GCLOUD_PROJECT;
+    process.env.GCLOUD_PROJECT = projectId;
+    var c = new Configuration();
+    c.getProjectId(function (err, id) {
+      t.deepEqual(err, null);
+      t.deepEqual(id, projectId);
+      process.env.GCLOUD_PROJECT = oldProject;
+      t.end();
+    });
+  }
+);
+
+test(
+  'Testing local value assignment in init process on a Configuration instance '+
+  'for service context',
+  function (t) {
+    var oldProject = process.env.GCLOUD_PROJECT;
+    delete process.env.GCLOUD_PROJECT;
+    var projectId = 'test-123';
+    var serv = {service: 'test', version: '1.2.x'};
+    var c = new Configuration({projectId: projectId, serviceContext: serv});
+    t.deepEqual(c.getServiceContext(), serv);
+    process.env.GCLOUD_PROJECT = oldProject;
     t.end();
   }
 );
 
 test(
-  'Testing how configuration creates a configuration object',
+  'Testing local value assignment in init process on a Configuration instance '+
+  'for service context in env variable',
   function (t) {
-
-    delete process.env.NODE_ENV;
+    var projectId = 'test-123';
+    var name = 'test';
+    var ver = 'test2';
+    process.env.GCLOUD_PROJECT = projectId;
+    process.env.GAE_MODULE_NAME = name;
+    process.env.GAE_MODULE_VERSION = ver;
+    var c = new Configuration();
+    t.deepEqual(c.getServiceContext(), {service: name, version: ver});
     delete process.env.GCLOUD_PROJECT;
-    t.deepEqual(
-      configuration()
-      , {projectId: null, reportUncaughtExceptions: true,
-        serviceContext: {service: '', version: ''}, key: null, shouldReportErrorsToAPI: false, version: version}
-      , "Given no configuration the return value should return a default value"
-    );
-
-    t.deepEqual(
-      configuration({projectId: "a-project-id"})
-      , {projectId: "a-project-id", reportUncaughtExceptions: true,
-        serviceContext: {service: '', version: ''}, key: null, shouldReportErrorsToAPI: false, version: version}
-      , "Given a valid project id the configuration the return value should assimilate this value"
-    );
-
-    t.deepEqual(
-      configuration({projectId: "a-project-id", reportUncaughtExceptions: true})
-      , {projectId: "a-project-id", reportUncaughtExceptions: true,
-        serviceContext: {service: '', version: ''}, key: null, shouldReportErrorsToAPI: false, version: version}
-      , "Given a valid project id and uncaught param the configuration the return value should assimilate these values"
-    );
-
-    t.deepEqual(
-      configuration({projectId: "a-project-id", reportUncaughtExceptions: false, key: 'akey'})
-      , {projectId: "a-project-id", reportUncaughtExceptions: false,
-        serviceContext: {service: '', version: ''}, key: 'akey', shouldReportErrorsToAPI: false, version: version}
-      , "Given a valid project id, uncaught param and a key the configuration the return value should assimilate these values"
-    );
-
-    process.env.GCLOUD_PROJECT = "another-project-id";
-    t.deepEqual(
-      configuration({projectId: "a-project-id", reportUncaughtExceptions: true, key: 'akey'})
-      , {projectId: "another-project-id", reportUncaughtExceptions: true,
-        serviceContext: {service: '', version: ''}, key: 'akey', shouldReportErrorsToAPI: false, version: version}
-      , "Given a project id set as the env var GCLOUD_PROJECT this will not override the given configuration"
-    );
-    delete process.env.GCLOUD_PROJECT;
-
-    process.env.NODE_ENV = 'production';
-    t.deepEqual(
-      configuration({projectId: "a-project-id", reportUncaughtExceptions: true, key: 'akey'})
-      , {projectId: "a-project-id", reportUncaughtExceptions: true,
-        serviceContext: {service: '', version: ''}, key: 'akey', shouldReportErrorsToAPI: true, version: version}
-      , "Given that the NODE_ENV is set to production the returned configuration of shouldReportErrorsToAPI should be set to true"
-    );
-    delete process.env.NODE_ENV;
-
-    process.env.GAE_MODULE_NAME = 'test_name';
-    process.env.GAE_MODULE_VERSION = 'test_version';
-    t.deepEqual(
-      configuration()
-      , {projectId: null, key: null, reportUncaughtExceptions: true, serviceContext: {service: 'test_name', version: 'test_version'}, shouldReportErrorsToAPI: false, version: version}
-      , "Given that the GAE_MODULE_NAME and GAE_MODULE_VERSION env variables are set the returned configuration of serviceContext should reflect those values"
-    );
-
-    t.deepEqual(
-      configuration({serviceContext: {service: 'another_name'}})
-      , {projectId: null, key: null, reportUncaughtExceptions: true, serviceContext: {service: 'another_name', version: 'test_version'}, shouldReportErrorsToAPI: false, version: version}
-      , "Given that the GAE_MODULE_NAME and GAE_MODULE_VERSION env variables are set but the service property is given in the configuration"
-        +"the returned configuration of serviceContext should reflect those values"
-    );
-
-    t.deepEqual(
-      configuration({serviceContext: {version: 'another_version'}})
-      , {projectId: null, key: null, reportUncaughtExceptions: true, serviceContext: {service: 'test_name', version: 'another_version'}, shouldReportErrorsToAPI: false, version: version}
-      , "Given that the GAE_MODULE_NAME and GAE_MODULE_VERSION env variables are set but the version property is given in the configuration"
-        +"the returned configuration of serviceContext should reflect those values"
-    );
-    delete process.env.GAE_MODULE_NAME;
     delete process.env.GAE_MODULE_VERSION;
-
-    t.deepEqual(
-      configuration({serviceContext: {service: 'a_different_test_name', version: 'another_version'}})
-      , {projectId: null, key: null, reportUncaughtExceptions: true, serviceContext: {service: 'a_different_test_name', version: 'another_version'}, shouldReportErrorsToAPI: false, version: version}
-      , "Given that the serviceContext service and version are given in the object configuration these values should be reflected in the configuration output."
-    );
-
-    process.env.GCLOUD_PROJECT = "another-project-id";
-    process.env.NODE_ENV = 'production';
-    t.deepEqual(
-      configuration({serviceContext: {service: 'a_different_test_name', version: 'another_version'}})
-      , {projectId: 'another-project-id', key: null, reportUncaughtExceptions: true, serviceContext: {service: 'a_different_test_name', version: 'another_version'}, shouldReportErrorsToAPI: true, version: version}
-      , "Given that the node env is set to production the shouldReportErrorToAPI property should be of type boolean and value true"
-    );
-    delete process.env.NODE_ENV;
-    delete process.env.GCLOUD_PROJECT;
-
     t.end();
+  }
+);
+
+test(
+  'Testing local value assignment in init process on a Configuration instance '+
+  'for key',
+  function (t) {
+    var projectId = 'test-123';
+    var key = '1337';
+    var c = new Configuration({key: key, projectId: projectId});
+    t.deepEqual(c.getKey(), key);
+    t.end();
+  }
+);
+
+test(
+  'Testing local value assignment in init process on a Configuration instance '+
+  'for reportUncaughtExceptions',
+  function (t) {
+    var projectId = 'test-123';
+    var key = '1337';
+    var c = new Configuration({reportUncaughtExceptions: false, 
+      projectId: projectId});
+    t.deepEqual(c.getReportUncaughtExceptions(), false);
+    t.end();
+  }
+);
+
+test(
+  'Testing service value assignment in init process on a configuration ' +
+  'instance with number as id',
+  function (t) {
+    var id = '1234';
+    var s = nock(
+     'http://metadata.google.internal/computeMetadata/v1/project'
+    ).get('/project-id').times(1).reply(200, id);
+    var c = new Configuration();
+    c.getProjectId(function (err, num) {
+      t.deepEqual(err, null);
+      t.deepEqual(num, id);
+      t.end();
+    });
+  }
+);
+
+test(
+  'Testing service value assignment in init process on a configuration ' +
+  'instance with string as id',
+  function (t) {
+    var projectId = 'test-project-id';
+    var s = nock(
+     'http://metadata.google.internal/computeMetadata/v1/project'
+    ).get('/project-id').times(1).reply(200, projectId);
+    var c = new Configuration();
+    c.getProjectId(function (err, id) {
+      t.deepEqual(err, null);
+      t.deepEqual(id, projectId);
+      t.end();
+    });
   }
 );
