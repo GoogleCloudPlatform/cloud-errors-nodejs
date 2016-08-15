@@ -35,8 +35,8 @@ applications running in almost any environment. Here's an introductory video:
 
 	```JS
 	// Require the library and initialize the error handler
-	var errors = require('@google/cloud-errors')({
-		serviceContext: {service: 'my-service'}	// not needed on Google App Engine
+	var errors = require('@google/cloud-errors').start({
+		serviceContext: {service: 'my-service'} // not needed on Google App Engine
 	});
 
 	// Report an error to the Stackdriver Error Reporting API
@@ -61,7 +61,7 @@ When initing the Stackdriver Error Reporting library you must specify the follow
 On Google App Engine, these environment variables are already set.
 
 ```JS
-var errors = require('@google/cloud-errors')({
+var errors = require('@google/cloud-errors').start({
 	projectId: 'my-project-id',
 	key: 'my-api-key',
 	keyFilename: 'path-to-my-keyfile'
@@ -78,7 +78,8 @@ var errors = require('@google/cloud-errors')({
 ```JS
 var express = require('express');
 var app = express();
-var errors = require('@google/cloud-errors')();
+// Will create a errors instance based off env variables
+var errors = require('@google/cloud-errors').start();
 
 app.get('/error', function ( req, res, next ) {
     res.send('Something broke!');
@@ -98,7 +99,7 @@ app.listen(3000);
 
 ```JS
 var hapi = require('hapi');
-var errors = require('@google/cloud-errors')();
+var errors = require('@google/cloud-errors').start();
 
 var server = new hapi.Server();
 server.connection({ port: 3000 });
@@ -119,7 +120,7 @@ server.register({ register: errors.hapi });
 ### Using Koa
 
 ```JS
-var errors = require('@google/cloud-errors')();
+var errors = require('@google/cloud-errors').start();
 var koa = require('koa');
 var app = koa();
 
@@ -146,7 +147,7 @@ function respond(req, res, next) {
 }
 
 var restify = require('restify');
-var errors = require('@google/cloud-errors')();
+var errors = require('@google/cloud-errors').start();
 
 var server = restify.createServer();
 

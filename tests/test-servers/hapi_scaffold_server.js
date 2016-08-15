@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 var hapi = require('hapi');
-var errorHandler = require('../../index.js')();
+var errorHandler = require('../../index.js').start();
 
 var server = new hapi.Server();
 server.connection({ port: 3000 });

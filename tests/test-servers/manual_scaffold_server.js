@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var errors = require('../../index.js')();
+var errors = require('../../index.js').start();
 var r = errors.report('Sample string', (err, result) => {
   console.log('callback from report', err, result);
 });

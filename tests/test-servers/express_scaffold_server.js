@@ -20,10 +20,10 @@ var lodash = require('lodash');
 var has = lodash.has;
 var express = require('express');
 var app = express();
-var errorHandler = require('../../index.js')({
+var errorHandler = require('../../index.js').start({
   onUncaughtException: 'report',
   key: process.env.STUBBED_API_KEY,
-  projectId: 'ccavalli-test-debug-external'
+  projectId: process.env.STUBBED_PROJECT_NUM
 });
 var bodyParser = require('body-parser');
 

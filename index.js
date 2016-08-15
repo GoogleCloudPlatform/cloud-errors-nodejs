@@ -80,4 +80,4 @@ function initializeClientAndInterfaces ( initConfiguration ) {
   };
 }
 
-module.exports = initializeClientAndInterfaces;
+module.exports = {start: initializeClientAndInterfaces};
