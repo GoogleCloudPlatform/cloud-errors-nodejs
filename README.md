@@ -64,7 +64,6 @@ On Google App Engine, these environment variables are already set.
 var errors = require('@google/cloud-errors').start({
 	projectId: 'my-project-id',
 	key: 'my-api-key',
-	keyFilename: 'path-to-my-keyfile'
 	reportUncaughtExceptions: false, // defaults to true.
 	serviceContext: {
 		service: 'my-service',
