@@ -278,6 +278,7 @@ test(
     var projectId = 'test-123';
     var name = 'test';
     var ver = 'test2';
+    var oldProject = process.env.GCLOUD_PROJECT;
     process.env.GCLOUD_PROJECT = projectId;
     process.env.GAE_MODULE_NAME = name;
     process.env.GAE_MODULE_VERSION = ver;
@@ -285,6 +286,7 @@ test(
     t.deepEqual(c.getServiceContext(), {service: name, version: ver});
     delete process.env.GCLOUD_PROJECT;
     delete process.env.GAE_MODULE_VERSION;
+    process.env.GCLOUD_PROJECT = oldProject;
     t.end();
   }
 );

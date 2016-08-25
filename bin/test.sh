@@ -38,6 +38,7 @@ function decryptAcceptanceCredentials {
 function runFullSuite {
   $(npm bin)/istanbul cover -x "fuzzer.js" \
   $(npm bin)/tape ./tests/integration/*.js ./tests/unit/*.js \
+  ./tests/fixtures/*.js \
   --report lcovonly -- -R spec && cat ./coverage/lcov.info \
   | $(npm bin)/coveralls && rm -rf ./coverage
 }
