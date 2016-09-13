@@ -23,12 +23,16 @@ var manual = require('./lib/interfaces/manual.js');
 var express = require('./lib/interfaces/express.js');
 var restify = require('./lib/interfaces/restify');
 var uncaughtException = require('./lib/interfaces/uncaught.js');
+var createLogger = require('./lib/logger.js');
 
 /**
  * @typedef ConfigurationOptions
  * @type Object
  * @property {String} [projectId] - the projectId of the project deployed
  * @property {String} [keyFilename] - path to a key file to use for an API key
+ * @property {String|Number} logLevel - a integer between and including 0-5 or a
+ *  decimal representation of an integer including and between 0-5 in String
+ *  form
  * @property {String} [key] - API key to use for communication with the service
  * @property {uncaughtHandlingEnum}
  *  [onUncaughtException=uncaughtHandlingEnum.ignore] - one of the uncaught
@@ -62,10 +66,10 @@ var uncaughtException = require('./lib/interfaces/uncaught.js');
  *  reporting configuration
  * @returns {ApplicationErrorReportingInterface} - The error reporting interface
  */
-function initializeClientAndInterfaces ( initConfiguration ) {
-
-  var config = new Configuration(initConfiguration);
-  var client = new AuthClient(config);
+function initializeClientAndInterfaces (initConfiguration) {
+  var logger = createLogger(initConfiguration);
+  var config = new Configuration(initConfiguration, logger);
+  var client = new AuthClient(config, logger);
 
   // Setup the uncaught exception handler
   uncaughtException(client, config);

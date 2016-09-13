@@ -8,6 +8,7 @@
     "test": "./node_modules/istanbul/lib/cli.js cover -x \"fuzzer.js\" ./node_modules/tape/bin/tape ./tests/unit/*.js",
     "integration-tests": "./node_modules/istanbul/lib/cli.js cover -x \"error-message.js\" ./node_modules/tape/bin/tape ./tests/integration/*.js",
     "style": "./node_modules/jshint/bin/jshint lib index.js",
+    "coverage": "./bin/test.sh -l",
     "coveralls": "./bin/test.sh",
     "docs": "./node_modules/.bin/jsdoc -d docs index.js lib/"
   },

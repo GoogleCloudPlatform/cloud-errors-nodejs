@@ -22,8 +22,10 @@ var Configuration = require('../../lib/configuration.js');
 var version = require('../../package.json').version;
 var Fuzzer = require('../../utils/fuzzer.js');
 var cd = require('@google/cloud-diagnostics-common');
-var level = process.env.GCLOUD_DEBUG_LOGLEVEL
-var logger = cd.logger.create(isNumber(level) ? level : 4);
+var level = process.env.GCLOUD_DEBUG_LOGLEVEL;
+var logger = require('../../lib/logger.js')({
+  logLevel: isNumber(level) ? level : 4
+});
 var nock = require('nock');
 var METADATA_URL = 'http://metadata.google.internal/computeMetadata/v1';
 
@@ -38,7 +40,7 @@ test(
     t.deepEqual(typeof Configuration, 'function');
     f.fuzzFunctionForTypes(
       function (givenConfigFuzz) {
-        c = new Configuration(givenConfigFuzz);
+        c = new Configuration(givenConfigFuzz, logger);
         t.deepEqual(c._givenConfiguration, {}, 
           "The _givenConfiguration property should remain null if given "+
           "invalid input"
@@ -49,7 +51,7 @@ test(
     process.env.NODE_ENV = 'development';
     delete process.env.GCLOUD_PROJECT;
     t.doesNotThrow(function () { 
-      c = new Configuration(stubConfig); 
+      c = new Configuration(stubConfig, logger); 
     });
     t.deepEqual(c._givenConfiguration, stubConfig, 
       "Given a valid configuration the instance should assign it as the value "+
@@ -71,7 +73,7 @@ test(
       t.assert(err instanceof Error);
       t.deepEqual(id, null);
       process.env.NODE_ENV = 'production';
-      c = new Configuration();
+      c = new Configuration(undefined, logger);
       t.deepEqual(c._shouldReportErrorsToAPI, true, 
         "_shouldReportErrorsToAPI should init to true if env === production");
       t.deepEqual(c.getShouldReportErrorsToAPI(), true);
@@ -80,15 +82,15 @@ test(
       t.end();
     });
     t.throws(c.getProjectId, undefined, 'Should throw not given a callback parameter');
-    t.throws(function () { new Configuration({reportUncaughtExceptions: 1}) },
+    t.throws(function () { new Configuration({reportUncaughtExceptions: 1}, logger) },
       'Should throw when not given a boolean for reportUncaughtExceptions');
-    t.throws(function () { new Configuration({key: null}) },
+    t.throws(function () { new Configuration({key: null}, logger) },
       'Should throw when not given a string for reportUncaughtExceptions');
-    t.throws(function () { new Configuration({serviceContext: {service: false}}) },
+    t.throws(function () { new Configuration({serviceContext: {service: false}}, logger) },
       'Should throw when not given a string for serviceContext.service');  
-    t.throws(function () { new Configuration({serviceContext: {version: true}}) },
+    t.throws(function () { new Configuration({serviceContext: {version: true}}, logger) },
       'Should throw when not given a string for serviceContext.version');
-    t.doesNotThrow(function () { new Configuration({serviceContext: {}}) },
+    t.doesNotThrow(function () { new Configuration({serviceContext: {}}, logger) },
       'Should not throw when given an empty object');
   }
 );
@@ -101,7 +103,7 @@ test(
     var s = nock(
      'http://metadata.google.internal/computeMetadata/v1/project'
     ).get('/project-id').times(1).reply(500);
-    var c = new Configuration();
+    var c = new Configuration(undefined, logger);
     c.getProjectId(function (err, id) {
       t.assert(err instanceof Error);
       t.deepEqual(id, null, 'The returned value for project number should be null');
@@ -119,7 +121,7 @@ test(
     var oldProject = process.env.GCLOUD_PROJECT;
     delete process.env.GCLOUD_PROJECT;
     var projectNumber = 1234;
-    var c = new Configuration({projectId: projectNumber});
+    var c = new Configuration({projectId: projectNumber}, logger);
     var s = nock(
      'http://metadata.google.internal/computeMetadata/v1/project'
     ).get('/project-id').times(1).reply(500);
@@ -140,7 +142,7 @@ test(
     var oldProject = process.env.GCLOUD_PROJECT;
     delete process.env.GCLOUD_PROJECT;
     var projectNumber = null;
-    var c = new Configuration({projectId: projectNumber});
+    var c = new Configuration({projectId: projectNumber}, logger);
     var s = nock(
      'http://metadata.google.internal/computeMetadata/v1/project'
     ).get('/project-id').times(1).reply(500);
@@ -161,7 +163,7 @@ test(
     var oldProject = process.env.GCLOUD_PROJECT;
     delete process.env.GCLOUD_PROJECT;
     var projectNumber = '1234';
-    var c = new Configuration({projectId: projectNumber});
+    var c = new Configuration({projectId: projectNumber}, logger);
     var s = nock(
      'http://metadata.google.internal/computeMetadata/v1/project'
     ).get('/project-id').times(1).reply(500);
@@ -178,7 +180,7 @@ test(
 test(
   'Testing basic init behaviours',
   function (t) {
-    var c = new Configuration();
+    var c = new Configuration(undefined, logger);
     var pn = '123';
     var pi = 'test';
     c._projectId = pi;
@@ -204,7 +206,7 @@ test(
     var oldProject = process.env.GCLOUD_PROJECT;
     var projectNumber = '1234';
     process.env.GCLOUD_PROJECT = projectNumber;
-    var c = new Configuration();
+    var c = new Configuration(undefined, logger);
     var s = nock(
      'http://metadata.google.internal/computeMetadata/v1/project'
     ).get('/project-id').times(1).reply(500);
@@ -225,7 +227,7 @@ test(
     var oldProject = process.env.GCLOUD_PROJECT;
     delete process.env.GCLOUD_PROJECT;
     var projectId = 'test-123';
-    var c = new Configuration({projectId: projectId});
+    var c = new Configuration({projectId: projectId}, logger);
     var s = nock(
      'http://metadata.google.internal/computeMetadata/v1/project'
     ).get('/project-id').times(1).reply(500);
@@ -246,7 +248,7 @@ test(
     var projectId = 'test-123';
     var oldProject = process.env.GCLOUD_PROJECT;
     process.env.GCLOUD_PROJECT = projectId;
-    var c = new Configuration();
+    var c = new Configuration(undefined, logger);
     c.getProjectId(function (err, id) {
       t.deepEqual(err, null);
       t.deepEqual(id, projectId);
@@ -264,7 +266,8 @@ test(
     delete process.env.GCLOUD_PROJECT;
     var projectId = 'test-123';
     var serv = {service: 'test', version: '1.2.x'};
-    var c = new Configuration({projectId: projectId, serviceContext: serv});
+    var c = new Configuration({projectId: projectId, serviceContext: serv},
+      logger);
     t.deepEqual(c.getServiceContext(), serv);
     process.env.GCLOUD_PROJECT = oldProject;
     t.end();
@@ -282,7 +285,7 @@ test(
     process.env.GCLOUD_PROJECT = projectId;
     process.env.GAE_MODULE_NAME = name;
     process.env.GAE_MODULE_VERSION = ver;
-    var c = new Configuration();
+    var c = new Configuration(undefined, logger);
     t.deepEqual(c.getServiceContext(), {service: name, version: ver});
     delete process.env.GCLOUD_PROJECT;
     delete process.env.GAE_MODULE_VERSION;
@@ -297,7 +300,7 @@ test(
   function (t) {
     var projectId = 'test-123';
     var key = '1337';
-    var c = new Configuration({key: key, projectId: projectId});
+    var c = new Configuration({key: key, projectId: projectId}, logger);
     t.deepEqual(c.getKey(), key);
     t.end();
   }
@@ -310,7 +313,7 @@ test(
     var projectId = 'test-123';
     var key = '1337';
     var c = new Configuration({reportUncaughtExceptions: false, 
-      projectId: projectId});
+      projectId: projectId}, logger);
     t.deepEqual(c.getReportUncaughtExceptions(), false);
     t.end();
   }
@@ -324,7 +327,7 @@ test(
     var s = nock(
      'http://metadata.google.internal/computeMetadata/v1/project'
     ).get('/project-id').times(1).reply(200, id);
-    var c = new Configuration();
+    var c = new Configuration(undefined, logger);
     c.getProjectId(function (err, num) {
       t.deepEqual(err, null);
       t.deepEqual(num, id);
@@ -341,7 +344,7 @@ test(
     var s = nock(
      'http://metadata.google.internal/computeMetadata/v1/project'
     ).get('/project-id').times(1).reply(200, projectId);
-    var c = new Configuration();
+    var c = new Configuration(undefined, logger);
     c.getProjectId(function (err, id) {
       t.deepEqual(err, null);
       t.deepEqual(id, projectId);

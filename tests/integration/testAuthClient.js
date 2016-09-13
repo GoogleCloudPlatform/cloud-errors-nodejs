@@ -20,6 +20,7 @@ var nock = require('nock');
 var RequestHandler = require('../../lib/google-apis/auth-client.js');
 var ErrorMessage = require('../../lib/classes/error-message.js');
 var Configuration = require('../../lib/configuration.js');
+var createLogger = require('../../lib/logger.js');
 var lodash = require('lodash');
 var isObject = lodash.isObject;
 var isString = lodash.isString;
@@ -31,7 +32,7 @@ var client;
 test(
   'Test given valid init parameters we should be able to create a client',
   function ( t ) {
-    var cfg  = new Configuration();
+    var cfg  = new Configuration({}, createLogger({logLevel: 5}));
     if (!isString(process.env.GCLOUD_PROJECT)) {
       t.fail("The gcloud project id (GCLOUD_PROJECT) was not set as an env variable");
       t.end();
@@ -40,10 +41,12 @@ test(
       t.fail("The api key (STUBBED_API_KEY) was not set as an env variable");
       t.end();
       process.exit();
+    } else if (!isString(process.env.STUBBED_PROJECT_NUM)) {
+      t.fail('The project number (STUBBED_PROJECT_NUM) was not set as an env variable');
     }
 
     try {
-      client = new RequestHandler(cfg);
+      client = new RequestHandler(cfg, createLogger({logLevel: 5}));
     } catch (e) {
 
       t.fail("Could not init client:\n"+e);
@@ -171,7 +174,7 @@ test(
   'Given a key the client should include it as a url param on all requests',
   function (t) {
     var key = process.env.STUBBED_API_KEY
-    client = new RequestHandler(new Configuration({key: key}));
+    client = new RequestHandler(new Configuration({key: key}, createLogger({logLevel: 5})));
     var er = new Error("_@google_STACKDRIVER_INTEGRATION_TEST_ERROR__");
     var em = new ErrorMessage()
       .setMessage(er.stack);
@@ -229,7 +232,8 @@ test(
   function (t) {
     var old = process.env.NODE_ENV;
     delete process.env.NODE_ENV;
-    client = new RequestHandler(new Configuration());
+    var l = createLogger({logLevel: 5});
+    client = new RequestHandler(new Configuration(undefined, l), createLogger({logLevel: 5}));
     client.sendError({}, function (err, response, body){
       t.assert(
         err instanceof Error,
@@ -263,8 +267,8 @@ test(
     var er = new Error("_@google_STACKDRIVER_INTEGRATION_TEST_API_KEY_ERROR__");
     var em = new ErrorMessage()
       .setMessage(er.stack);
-    var cfg = new Configuration();
-    client = new RequestHandler(cfg);
+    var cfg = new Configuration(undefined, createLogger({logLevel: 5}));
+    client = new RequestHandler(cfg, createLogger({logLevel: 5}));
     client.sendError(em, function (err, response, body) {
       t.assert(
         err instanceof Error,
@@ -294,10 +298,11 @@ test(
     var oldKey = process.env.STUBBED_API_KEY;
     delete process.env.GCLOUD_PROJECT;
     delete process.env.STUBBED_API_KEY;
-     var cfg  = new Configuration({projectId: process.env.STUBBED_PROJECT_NUM});
+     var cfg  = new Configuration({projectId: process.env.STUBBED_PROJECT_NUM},
+      createLogger({logLevel: 5}));
 
     try {
-      client = new RequestHandler(cfg);
+      client = new RequestHandler(cfg, createLogger({logLevel: 5}));
     } catch (e) {
 
       t.fail("Could not init client:\n"+e);

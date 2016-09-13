@@ -65,6 +65,7 @@ var errors = require('@google/cloud-errors').start({
 	projectId: 'my-project-id',
 	key: 'my-api-key',
 	reportUncaughtExceptions: false, // defaults to true.
+	logLevel: 0, // defaults to logging warnings (2). Available levels: 0-5
 	serviceContext: {
 		service: 'my-service',
 		version: 'my-service-version'
