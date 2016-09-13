@@ -158,7 +158,7 @@ test(
   , function ( t ) {
 
     var TEST_SERVICE_VALID = {service: 'test', version: 'test'};
-    var TEST_SERVICE_DEFAULT = {service: '', version: ''};
+    var TEST_SERVICE_DEFAULT = {service: 'node', version: undefined};
     var TEST_SERVICE_INVALID = 12;
 
     t.plan(3);

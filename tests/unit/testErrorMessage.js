@@ -197,7 +197,7 @@ test(
 
     t.deepEqual(
       em.serviceContext
-      , { service: "", version: "" }
+      , { service: "node", version: undefined }
       , [
           'The service context property should have two properties:'
           , 'service and version both with a string value of: default'
@@ -317,7 +317,8 @@ test(
     var em = new ErrorMessage();
     var AFFIRMATIVE_TEST_VALUE = "VALID_INPUT_AND_TYPE";
     var DEFAULT_TEST_VALUE = "DEFAULT";
-    var DEFAULT_EM_VALUE = "";
+    var DEFAULT_VERSION_VALUE = undefined;
+    var DEFAULT_SERVICE_VALUE = "node";
 
     t.plan(10);
 
@@ -351,7 +352,7 @@ test(
     t.deepEqual(
       em.serviceContext
       , {
-        service: DEFAULT_EM_VALUE
+        service: DEFAULT_SERVICE_VALUE
         , version: AFFIRMATIVE_TEST_VALUE
       }
       , [
@@ -366,7 +367,7 @@ test(
       em.serviceContext
       , {
         service: AFFIRMATIVE_TEST_VALUE
-        , version: DEFAULT_EM_VALUE
+        , version: DEFAULT_VERSION_VALUE
       }
       , [
         "Providing only a valid value to the first argument of"
@@ -379,8 +380,8 @@ test(
     t.deepEqual(
       em.serviceContext
       , {
-        service: DEFAULT_EM_VALUE
-        , version: DEFAULT_EM_VALUE
+        service: DEFAULT_SERVICE_VALUE
+        , version: DEFAULT_VERSION_VALUE
       }
       , [
         "Providing null as the value to both arguments should set both"
@@ -392,8 +393,8 @@ test(
     t.deepEqual(
       em.serviceContext
       , {
-        service: DEFAULT_EM_VALUE
-        , version: DEFAULT_EM_VALUE
+        service: DEFAULT_SERVICE_VALUE
+        , version: DEFAULT_VERSION_VALUE
       }
       , [
         "Providing numbers as the value to both arguments should set both"
@@ -405,8 +406,8 @@ test(
     t.deepEqual(
       em.serviceContext
       , {
-        service: DEFAULT_EM_VALUE
-        , version: DEFAULT_EM_VALUE
+        service: DEFAULT_SERVICE_VALUE
+        , version: DEFAULT_VERSION_VALUE
       }
       , [
         "Providing numbers as the value to both arguments should set both"
@@ -418,8 +419,8 @@ test(
     t.deepEqual(
       em.serviceContext
       , {
-        service: DEFAULT_EM_VALUE
-        , version: DEFAULT_EM_VALUE
+        service: DEFAULT_SERVICE_VALUE
+        , version: DEFAULT_VERSION_VALUE
       }
       , [
         "Providing arrays or objects as the value to both arguments"
@@ -431,8 +432,8 @@ test(
     t.deepEqual(
       em.serviceContext
       , {
-        service: DEFAULT_EM_VALUE
-        , version: DEFAULT_EM_VALUE
+        service: DEFAULT_SERVICE_VALUE
+        , version: DEFAULT_VERSION_VALUE
       }
       , "Providing no arguments should set both properties as empty strings"
     );
