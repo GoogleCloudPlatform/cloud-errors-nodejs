@@ -15,7 +15,9 @@
  */
 
 var test = require('tape');
-var isFunction = require('lodash').isFunction;
+var lodash = require('lodash');
+var isFunction = lodash.isFunction;
+var isString = lodash.isString;
 var uncaughtSetup = require('../../lib/interfaces/uncaught.js');
 var Configuration = require('../../lib/configuration.js');
 var ErrorMessage = require('../../lib/classes/error-message.js');
@@ -50,6 +52,13 @@ test('Uncaught handler setup', function (t) {
 });
 
 test('Test uncaught shutdown behavior', function (t) {
+  if (!isString(process.env.GOOGLE_APPLICATION_CREDENTIALS)
+    || !isString(process.env.GCLOUD_PROJECT)) {
+    t.skip('Skipping uncaught fixture test because environment variables' +
+      'are not set');
+    t.end();
+    return;
+  }
   var isolate = fork('./tests/fixtures/uncaughtExitBehaviour.js', null, process.env);
   var timeout = setTimeout(function () {
     t.fail('Should terminate before 2500ms');
