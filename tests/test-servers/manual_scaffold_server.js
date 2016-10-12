@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 var errors = require('../../index.js').start();
-var r = errors.report('Sample string', (err, result) => {
-  console.log('callback from report', err, result);
+var r = errors.report('Sample test string', (err, response, body) => {
+  console.log(
+    'Callback from report:\n',
+    '\tError: ', err, '\n', 
+    '\tResponse Body:', body
+  );
 });
 
 var express = require('express');
