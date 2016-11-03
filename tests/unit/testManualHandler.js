@@ -16,7 +16,7 @@
 
 var test = require('tape');
 var manual = require('../../lib/interfaces/manual.js');
-var Configuration = require('../../lib/configuration.js');
+var Configuration = require('../fixtures/configuration.js');
 var config = new Configuration({});
 var ErrorMessage = require('../../lib/classes/error-message.js');
 
@@ -39,7 +39,7 @@ test('Test manual handler interface', function(t) {
 test('single string argument is accepted', function(t) {
   var r = report('doohickey');
   t.ok(r instanceof ErrorMessage, 'should be an instance of ErrorMessage');
-  t.equal(r.message, 'doohickey', 'string error should propagate');
+  t.ok(r.message.match(/doohickey/), 'string error should propagate');
   t.end();
 });
 
@@ -53,7 +53,7 @@ test('callback function should get called', function(t) {
   var r = report('malarkey', function(err, res) {
     t.end();
   });
-  t.equal(r.message, 'malarkey', 'string error should propagate');
+  t.ok(r.message.match(/malarkey/), 'string error should propagate');
 });
 
 test('calls without any arguments work', function(t) {
@@ -99,7 +99,8 @@ test('missing additional message', function(t) {
   var r = report('ticky', { method: 'TACKEY' }, function(err, res) {
     t.end();
   });
-  t.equal(r.message, 'ticky', 'original message should be preserved');
+  t.ok(r.message.match(/ticky/) && !r.message.match(/TACKEY/),
+    'original message should be preserved');
   t.equal(r.context.httpRequest.method, 'TACKEY');
 });
 
@@ -107,21 +108,22 @@ test('arguments after callback function should get ignored', function(t) {
   var r = report('hockey', function(err, res) {
     t.end();
   }, 'field');
-  t.equal(r.message, 'hockey', 'string after callback should be ignored');
+  t.ok(r.message.match('hockey') && !r.message.match('field'),
+    'string after callback should be ignored');
 });
 
 test('null arguments in the middle', function(t) {
   var r = report('pokey', null, null, function(err, res) {
     t.end();
   });
-  t.equal(r.message, 'pokey', 'string error should propagate');
+  t.ok(r.message.match(/pokey/), 'string error should propagate');
 });
 
 test('undefined arguments in the middle', function(t) {
   var r = report('Turkey', undefined, undefined, function(err, res) {
     t.end();
   });
-  t.equal(r.message, 'Turkey', 'string error should propagate');
+  t.ok(r.message.match(/Turkey/), 'string error should propagate');
 });
 
 test('undefined request', function(t) {
@@ -135,7 +137,8 @@ test('undefined additional message', function(t) {
   var r = report('Mickey', { method: 'SNIFF'}, undefined, function(err, res) {
     t.end();
   });
-  t.equal(r.message, 'Mickey', 'string error should propagate');
+  t.ok(r.message.match(/Mickey/) && !r.message.match(/SNIFF/),
+    'string error should propagate');
   t.equal(r.context.httpRequest.method, 'SNIFF');
 });
 

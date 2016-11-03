@@ -19,6 +19,13 @@ var test = require('tape');
 var restifyInterface = require('../../lib/interfaces/restify.js');
 var UNCAUGHT_EVENT = 'uncaughtException';
 
+// node v0.12 compatibility
+if (!EventEmitter.prototype.listenerCount) {
+  EventEmitter.prototype.listenerCount = function(eventName) {
+    return EventEmitter.listenerCount(this, eventName);
+  }
+}
+
 test('Attachment of the server object to uncaughtException', function (t) {
   var ee = new EventEmitter;
   t.plan(2);

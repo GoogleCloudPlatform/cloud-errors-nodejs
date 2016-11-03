@@ -17,14 +17,13 @@
 var lodash = require('lodash');
 var isFunction = lodash.isFunction;
 var isPlainObject = lodash.isPlainObject;
-var isString = lodash.isString;
 var has = lodash.has;
 var test = require('tape');
 var hapiInterface = require('../../lib/interfaces/hapi.js');
 var ErrorMessage = require('../../lib/classes/error-message.js');
 var Fuzzer = require('../../utils/fuzzer.js');
 var EventEmitter = require('events').EventEmitter;
-var Configuration = require('../../lib/configuration.js');
+var Configuration = require('../fixtures/configuration.js');
 
 test(
   "Given invalid, variable input the hapi interface handler setup should not throw errors"

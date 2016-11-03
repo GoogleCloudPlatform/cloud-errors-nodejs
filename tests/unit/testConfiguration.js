@@ -18,16 +18,15 @@
 var test = require('tape');
 var lodash = require('lodash');
 var isNumber = lodash.isNumber;
-var Configuration = require('../../lib/configuration.js');
+var Configuration = require('../fixtures/configuration.js');
 var version = require('../../package.json').version;
 var Fuzzer = require('../../utils/fuzzer.js');
-var cd = require('@google/cloud-diagnostics-common');
 var level = process.env.GCLOUD_DEBUG_LOGLEVEL;
 var logger = require('../../lib/logger.js')({
   logLevel: isNumber(level) ? level : 4
 });
 var nock = require('nock');
-var METADATA_URL = 'http://metadata.google.internal/computeMetadata/v1';
+var METADATA_URL = 'http://metadata.google.internal/computeMetadata/v1/project';
 
 test(
   'Initing an instance of Configuration should return a Configuration instance',
@@ -100,9 +99,7 @@ test(
   function (t) {
     var oldProject = process.env.GCLOUD_PROJECT;
     delete process.env.GCLOUD_PROJECT;
-    var s = nock(
-     'http://metadata.google.internal/computeMetadata/v1/project'
-    ).get('/project-id').times(1).reply(500);
+    var s = nock(METADATA_URL).get('/project-id').times(1).reply(500);
     var c = new Configuration(undefined, logger);
     c.getProjectId(function (err, id) {
       t.assert(err instanceof Error);
@@ -122,9 +119,7 @@ test(
     delete process.env.GCLOUD_PROJECT;
     var projectNumber = 1234;
     var c = new Configuration({projectId: projectNumber}, logger);
-    var s = nock(
-     'http://metadata.google.internal/computeMetadata/v1/project'
-    ).get('/project-id').times(1).reply(500);
+    var s = nock(METADATA_URL).get('/project-id').times(1).reply(500);
     c.getProjectId(function (err, id) {
       t.deepEqual(err, null);
       t.deepEqual(id, projectNumber.toString());
@@ -143,9 +138,7 @@ test(
     delete process.env.GCLOUD_PROJECT;
     var projectNumber = null;
     var c = new Configuration({projectId: projectNumber}, logger);
-    var s = nock(
-     'http://metadata.google.internal/computeMetadata/v1/project'
-    ).get('/project-id').times(1).reply(500);
+    var s = nock(METADATA_URL).get('/project-id').times(1).reply(500);
     c.getProjectId(function (err, id) {
       t.assert(err instanceof Error);
       t.deepEqual(id, null);
@@ -164,9 +157,7 @@ test(
     delete process.env.GCLOUD_PROJECT;
     var projectNumber = '1234';
     var c = new Configuration({projectId: projectNumber}, logger);
-    var s = nock(
-     'http://metadata.google.internal/computeMetadata/v1/project'
-    ).get('/project-id').times(1).reply(500);
+    var s = nock(METADATA_URL).get('/project-id').times(1).reply(500);
     c.getProjectId(function (err, id) {
       t.deepEqual(null, err);
       t.deepEqual(id, projectNumber);
@@ -207,9 +198,7 @@ test(
     var projectNumber = '1234';
     process.env.GCLOUD_PROJECT = projectNumber;
     var c = new Configuration(undefined, logger);
-    var s = nock(
-     'http://metadata.google.internal/computeMetadata/v1/project'
-    ).get('/project-id').times(1).reply(500);
+    var s = nock(METADATA_URL).get('/project-id').times(1).reply(500);
     c.getProjectId(function (err, id) {
       t.deepEqual(null, err);
       t.deepEqual(id, projectNumber);
@@ -228,9 +217,7 @@ test(
     delete process.env.GCLOUD_PROJECT;
     var projectId = 'test-123';
     var c = new Configuration({projectId: projectId}, logger);
-    var s = nock(
-     'http://metadata.google.internal/computeMetadata/v1/project'
-    ).get('/project-id').times(1).reply(500);
+    var s = nock(METADATA_URL).get('/project-id').times(1).reply(500);
     c.getProjectId(function (err, id) {
       t.deepEqual(err, null);
       t.deepEqual(id, projectId);
@@ -324,9 +311,8 @@ test(
   'instance with number as id',
   function (t) {
     var id = '1234';
-    var s = nock(
-     'http://metadata.google.internal/computeMetadata/v1/project'
-    ).get('/project-id').times(1).reply(200, id);
+    var s = nock(METADATA_URL).get('/project-id').times(1)
+      .reply(200, id);
     var c = new Configuration(undefined, logger);
     c.getProjectId(function (err, num) {
       t.deepEqual(err, null);
@@ -341,9 +327,8 @@ test(
   'instance with string as id',
   function (t) {
     var projectId = 'test-project-id';
-    var s = nock(
-     'http://metadata.google.internal/computeMetadata/v1/project'
-    ).get('/project-id').times(1).reply(200, projectId);
+    var s = nock(METADATA_URL).get('/project-id').times(1)
+      .reply(200, projectId);
     var c = new Configuration(undefined, logger);
     c.getProjectId(function (err, id) {
       t.deepEqual(err, null);

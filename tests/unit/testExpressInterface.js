@@ -20,7 +20,7 @@ var merge = lodash.merge;
 var expressInterface = require('../../lib/interfaces/express.js');
 var ErrorMessage = require('../../lib/classes/error-message.js');
 var Fuzzer = require('../../utils/fuzzer.js');
-var Configuration = require('../../lib/configuration.js');
+var Configuration = require('../fixtures/configuration.js');
 
 test(
   "Given invalid, variable input the express interface handler setup should not throw errors"

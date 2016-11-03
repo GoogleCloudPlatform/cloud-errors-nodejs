@@ -19,13 +19,12 @@ var test = require('tape');
 var nock = require('nock');
 var RequestHandler = require('../../lib/google-apis/auth-client.js');
 var ErrorMessage = require('../../lib/classes/error-message.js');
-var Configuration = require('../../lib/configuration.js');
+var Configuration = require('../fixtures/configuration.js');
 var createLogger = require('../../lib/logger.js');
 var lodash = require('lodash');
 var isObject = lodash.isObject;
 var isString = lodash.isString;
 var isEmpty = lodash.isEmpty;
-var has = lodash.has;
 var client;
 
 
