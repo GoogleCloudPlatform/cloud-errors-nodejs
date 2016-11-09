@@ -27,7 +27,7 @@ test('Initializing the logger', function (t) {
   t.doesNotThrow(createLogger.bind(null, {}), createLogger(),
     'Does not throw given an empty object');
   t.doesNotThrow(
-    createLogger.bind(null, {logLevel: 3}), 
+    createLogger.bind(null, {logLevel: 3}),
     createLogger({logLevel: 3}),
     'Does not throw given a valid configuration object with a valid log level'
   );
@@ -50,6 +50,30 @@ test('Initializing the logger', function (t) {
     ['Does not throw given only the environment configuration variable for log',
     'level setting'].join(' ')
   );
+  process.env.GCLOUD_ERRORS_LOGLEVEL = oldEnv;
+  t.end();
+});
+
+test('Default log level is WARN', function(t) {
+  var oldEnv = process.env.GCLOUD_ERRORS_LOGLEVEL;
+  delete process.env.GCLOUD_ERRORS_LOGLEVEL;
+
+  var buffer = [];
+  var orig = console._stdout.write;
+  console._stdout.write = function() {
+    buffer.push(arguments[0]);
+    orig.apply(this, arguments);
+  }
+
+  var logger = createLogger({});
+  logger.warn('test warning message');
+  t.ok(
+    buffer.pop().match(/test warning message/),
+    'warn message should have logged'
+  );
+
+  console._stdout.write = orig;
+
   process.env.GCLOUD_ERRORS_LOGLEVEL = oldEnv;
   t.end();
 });
