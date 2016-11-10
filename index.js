@@ -14,10 +14,20 @@
  * limitations under the License.
  */
 'use strict';
+
+// Check if Koa is usable
+var useKoa = true;
+try {
+  eval('(function *() {})');
+} catch (e) {
+  useKoa = false;
+}
+
 var Configuration = require('./lib/configuration.js');
 var AuthClient = require('./lib/google-apis/auth-client.js');
 // Begin error reporting interfaces
-var koa = require('./lib/interfaces/koa.js');
+
+var koa = useKoa ? require('./lib/interfaces/koa.js') : null;
 var hapi = require('./lib/interfaces/hapi.js');
 var manual = require('./lib/interfaces/manual.js');
 var express = require('./lib/interfaces/express.js');
@@ -75,13 +85,16 @@ function initializeClientAndInterfaces (initConfiguration) {
   uncaughtException(client, config);
 
   // Return the application interfaces for use by the hosting application
-  return {
-    koa: koa(client, config),
+  var result = {
     hapi: hapi(client, config),
     report: manual(client, config),
     express: express(client, config),
     restify: restify(client, config)
   };
+  if (koa) {
+    result.koa = koa(client, config);
+  }
+  return result;
 }
 
 module.exports = {start: initializeClientAndInterfaces};

@@ -119,6 +119,8 @@ server.register({ register: errors.hapi });
 
 ### Using Koa
 
+**Note**: Koa is not supported in Node.js v0.12 unless the `--harmony` flag is enabled.
+
 ```JS
 var errors = require('@google/cloud-errors').start();
 var koa = require('koa');
