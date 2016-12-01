@@ -1,8 +1,11 @@
 # Node.js module for Stackdriver Error Reporting
 
-[![Build Status](https://travis-ci.org/GoogleCloudPlatform/cloud-errors-nodejs.svg?branch=master)](https://travis-ci.org/GoogleCloudPlatform/cloud-errors-nodejs)
-[![Coverage Status](https://coveralls.io/repos/github/GoogleCloudPlatform/cloud-errors-nodejs/badge.svg?branch=coveralls)](https://coveralls.io/github/GoogleCloudPlatform/cloud-errors-nodejs?branch=coveralls)
-[![Dependencies](https://david-dm.org/GoogleCloudPlatform/cloud-errors-nodejs.svg)](https://david-dm.org/GoogleCloudPlatform/cloud-errors-nodejs)
+[![NPM Version][npm-image]][npm-url]
+[![Build Status][travis-image]][travis-url]
+[![Test Coverage][coveralls-image]][coveralls-url]
+[![Dependency Status][david-image]][david-url]
+[![devDependency Status][david-dev-image]][david-dev-url]
+[![Known Vulnerabilities][snyk-image]][snyk-url]
 
 > **This is not an official Google product.** This module is experimental and may not be ready for use.
 > This module uses APIs that may be undocumented and are subject to change without notice.
@@ -244,3 +247,15 @@ git commit
 [gcloud-sdk]: https://cloud.google.com/sdk/gcloud/
 [app-default-credentials]: https://developers.google.com/identity/protocols/application-default-credentials
 [service-account]: https://console.developers.google.com/apis/credentials/serviceaccountkey
+[npm-image]: https://badge.fury.io/js/%40google%2Fcloud-errors.svg
+[npm-url]: https://npmjs.org/package/@google/cloud-errors
+[travis-image]: https://travis-ci.org/GoogleCloudPlatform/cloud-errors-nodejs.svg?branch=master
+[travis-url]: https://travis-ci.org/GoogleCloudPlatform/cloud-errors-nodejs
+[coveralls-image]: https://coveralls.io/repos/GoogleCloudPlatform/cloud-errors-nodejs/badge.svg?branch=master&service=github
+[coveralls-url]: https://coveralls.io/github/GoogleCloudPlatform/cloud-errors-nodejs?branch=master
+[david-image]: https://david-dm.org/GoogleCloudPlatform/cloud-errors-nodejs.svg
+[david-url]: https://david-dm.org/GoogleCloudPlatform/cloud-errors-nodejs
+[david-dev-image]: https://david-dm.org/GoogleCloudPlatform/cloud-errors-nodejs/dev-status.svg
+[david-dev-url]: https://david-dm.org/GoogleCloudPlatform/cloud-errors-nodejs?type=dev
+[snyk-image]: https://snyk.io/test/github/GoogleCloudPlatform/cloud-errors-nodejs/badge.svg
+[snyk-url]: https://snyk.io/test/github/GoogleCloudPlatform/cloud-errors-nodejs
