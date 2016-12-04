@@ -105,6 +105,7 @@ var errors = require('@google/cloud-errors').start({
     keyFilename: '/path/to/keyfile.json',
     credentials: require('./path/to/keyfile.json'),
     key: 'my-api-key', // if specified, uses this value to authenticate each request individually.
+    ignoreEnvironmentCheck: true, // if set to true library will report errors to the service regardless of env
     reportUncaughtExceptions: false, // defaults to true.
     logLevel: 0, // defaults to logging warnings (2). Available levels: 0-5
     serviceContext: {

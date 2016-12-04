@@ -59,7 +59,8 @@ test(
     t.deepEqual(c._reportUncaughtExceptions, true);
     t.deepEqual(c.getReportUncaughtExceptions(), true);
     t.deepEqual(c._shouldReportErrorsToAPI, false, 
-      "_shouldReportErrorsToAPI should init to false if env !== production");
+      "_shouldReportErrorsToAPI should init to false if env !== production "+
+      "and the force flag is not set tot true");
     t.deepEqual(c.getShouldReportErrorsToAPI(), false);
     t.deepEqual(c._projectId, null);
     t.deepEqual(c._key, null);
@@ -68,6 +69,13 @@ test(
     t.deepEqual(c.getServiceContext(), {service: '', version: ''});
     t.deepEqual(c._version, version);
     t.deepEqual(c.getVersion(), version);
+    stubConfig.ignoreEnvironmentCheck = true;
+    c = new Configuration(stubConfig, logger);
+    t.deepEqual(c.getShouldReportErrorsToAPI(), true, 
+      'ignoreEnvironmentCheck flag should set the report errors to api flag '+
+      'true even if env is not set production');
+    delete stubConfig.ignoreEnvironmentCheck;
+    c = new Configuration(stubConfig, logger);
     c.getProjectId(function (err, id) {
       t.assert(err instanceof Error);
       t.deepEqual(id, null);
@@ -89,6 +97,8 @@ test(
       'Should throw when not given a string for serviceContext.service');  
     t.throws(function () { new Configuration({serviceContext: {version: true}}, logger) },
       'Should throw when not given a string for serviceContext.version');
+    t.throws(function () {new Configuration({ignoreEnvironmentCheck: null}, logger)},
+      'Should throw if given an invalid type for ignoreEnvironmentCheck')
     t.doesNotThrow(function () { new Configuration({serviceContext: {}}, logger) },
       'Should not throw when given an empty object');
   }

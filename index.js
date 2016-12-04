@@ -52,6 +52,9 @@ var createLogger = require('./lib/logger.js');
  *  running on
  * @property {String} [serviceContext.version] - the version the hosting
  *  application is currently labelled as
+ * @property {Boolean} [ignoreEnvironmentCheck] - flag indicating whether or not
+ *  to communicate errors to the Stackdriver service even if NODE_ENV is not set
+ *  to production
  */
 
 /**
