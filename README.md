@@ -22,7 +22,9 @@ applications running in almost any environment. Here's an introductory video:
 1. Your application needs to use Node.js version 0.12 or greater.
 1. You need a [Google Cloud project](https://console.cloud.google.com). Your application can run anywhere, but errors are reported to a particular project.
 1. [Enable the Stackdriver Error Reporting API](https://console.cloud.google.com/apis/api/clouderrorreporting.googleapis.com/overview) for your project.
-1. The module will only send errors when the `NODE_ENV` environment variable is set to `production`.
+1. The module will only send errors when the `NODE_ENV` environment variable is 
+set to `production` or the `ignoreEnvironmentCheck` property given in the
+runtime configuration object is set to `true`.
 
 ## Quick Start
 
@@ -104,10 +106,18 @@ var errors = require('@google/cloud-errors').start({
     projectId: 'my-project-id',
     keyFilename: '/path/to/keyfile.json',
     credentials: require('./path/to/keyfile.json'),
-    key: 'my-api-key', // if specified, uses this value to authenticate each request individually.
-    ignoreEnvironmentCheck: true, // if set to true library will report errors to the service regardless of env
-    reportUncaughtExceptions: false, // defaults to true.
-    logLevel: 0, // defaults to logging warnings (2). Available levels: 0-5
+    // if specified, uses this value to authenticate each request individually
+    key: 'my-api-key',
+    // if true library will attempt to report errors to the service regardless
+    // of the value of NODE_ENV
+    // defaults to false
+    ignoreEnvironmentCheck: false,
+    // determines if the library will attempt to report uncaught exceptions
+    // defaults to true
+    reportUncaughtExceptions: true,
+    // determines the logging level internal to the library; levels range 0-5
+    // defaults to 2 (warnings)
+    logLevel: 2, 
     serviceContext: {
         service: 'my-service',
         version: 'my-service-version'
