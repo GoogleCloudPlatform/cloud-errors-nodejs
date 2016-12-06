@@ -31,7 +31,8 @@ var client;
 test(
   'Test given valid init parameters we should be able to create a client',
   function ( t ) {
-    var cfg  = new Configuration({}, createLogger({logLevel: 5}));
+    var cfg  = new Configuration({ignoreEnvironmentCheck: true}, 
+      createLogger({logLevel: 5}));
     if (!isString(process.env.GCLOUD_PROJECT)) {
       t.fail("The gcloud project id (GCLOUD_PROJECT) was not set as an env variable");
       t.end();
@@ -173,7 +174,10 @@ test(
   'Given a key the client should include it as a url param on all requests',
   function (t) {
     var key = process.env.STUBBED_API_KEY
-    client = new RequestHandler(new Configuration({key: key}, createLogger({logLevel: 5})));
+    client = new RequestHandler(new Configuration(
+      {key: key, ignoreEnvironmentCheck: true},
+      createLogger({logLevel: 5})
+    ));
     var er = new Error("_@google_STACKDRIVER_INTEGRATION_TEST_ERROR__");
     var em = new ErrorMessage()
       .setMessage(er.stack);
@@ -297,8 +301,13 @@ test(
     var oldKey = process.env.STUBBED_API_KEY;
     delete process.env.GCLOUD_PROJECT;
     delete process.env.STUBBED_API_KEY;
-     var cfg  = new Configuration({projectId: process.env.STUBBED_PROJECT_NUM},
-      createLogger({logLevel: 5}));
+     var cfg  = new Configuration(
+      {
+        projectId: process.env.STUBBED_PROJECT_NUM,
+        ignoreEnvironmentCheck: true
+      },
+      createLogger({logLevel: 5})
+    );
 
     try {
       client = new RequestHandler(cfg, createLogger({logLevel: 5}));
