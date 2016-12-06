@@ -106,8 +106,6 @@ var errors = require('@google/cloud-errors').start({
     projectId: 'my-project-id',
     keyFilename: '/path/to/keyfile.json',
     credentials: require('./path/to/keyfile.json'),
-    // if specified, uses this value to authenticate each request individually
-    key: 'my-api-key',
     // if true library will attempt to report errors to the service regardless
     // of the value of NODE_ENV
     // defaults to false
