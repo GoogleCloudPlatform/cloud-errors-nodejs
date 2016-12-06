@@ -77,7 +77,7 @@ If your application is running outside of Google Cloud Platform, such as locally
         GCLOUD_PROJECT=particular-future-12345 node myapp.js
 
 1. You need to provide service account credentials to your application.
-  * The recommended way is via [Application Default Credentials][app-default-credentials].\
+  * The recommended way is via [Application Default Credentials][app-default-credentials].
     1. [Create a new JSON service account key][service-account].
     1. Copy the key somewhere your application can access it. Be sure not to expose the key publicly.
     1. Set the environment variable `GOOGLE_APPLICATION_CREDENTIALS` to the full path to the key. The trace agent will automatically look for this environment variable.
