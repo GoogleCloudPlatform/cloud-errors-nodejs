@@ -15,9 +15,9 @@
  */
 
 var test = require('tape');
-var ErrorMessage = require('../../lib/classes/error-message.js');
-var handleObjectAsError = require('../../lib/error-handlers/object.js');
-var errorClassParsingUtils = require('../../lib/error-parsing-utils.js');
+var ErrorMessage = require('../../src/classes/error-message.js');
+var handleObjectAsError = require('../../src/error-handlers/object.js');
+var errorClassParsingUtils = require('../../src/error-parsing-utils.js');
 
 
 test(

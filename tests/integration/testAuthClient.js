@@ -17,10 +17,10 @@
 'use strict';
 var test = require('tape');
 var nock = require('nock');
-var RequestHandler = require('../../lib/google-apis/auth-client.js');
-var ErrorMessage = require('../../lib/classes/error-message.js');
+var RequestHandler = require('../../src/google-apis/auth-client.js');
+var ErrorMessage = require('../../src/classes/error-message.js');
 var Configuration = require('../fixtures/configuration.js');
-var createLogger = require('../../lib/logger.js');
+var createLogger = require('../../src/logger.js');
 var lodash = require('lodash');
 var isObject = lodash.isObject;
 var isString = lodash.isString;

@@ -15,7 +15,7 @@
  */
 
 var test = require('tape');
-var expressRequestInformationExtractor = require('../../lib/request-extractors/express.js');
+var expressRequestInformationExtractor = require('../../src/request-extractors/express.js');
 var Fuzzer = require('../../utils/fuzzer.js');
 var _ = require('lodash');
 

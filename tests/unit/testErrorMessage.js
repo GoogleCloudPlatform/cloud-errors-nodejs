@@ -15,7 +15,7 @@
  */
 
 var test = require('tape');
-var ErrorMessage = require('../../lib/classes/error-message.js');
+var ErrorMessage = require('../../src/classes/error-message.js');
 
 test(
   'Testing the ErrorMessage custom prototype'

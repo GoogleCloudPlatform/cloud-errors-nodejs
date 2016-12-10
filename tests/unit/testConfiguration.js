@@ -22,7 +22,7 @@ var Configuration = require('../fixtures/configuration.js');
 var version = require('../../package.json').version;
 var Fuzzer = require('../../utils/fuzzer.js');
 var level = process.env.GCLOUD_DEBUG_LOGLEVEL;
-var logger = require('../../lib/logger.js')({
+var logger = require('../../src/logger.js')({
   logLevel: isNumber(level) ? level : 4
 });
 var nock = require('nock');

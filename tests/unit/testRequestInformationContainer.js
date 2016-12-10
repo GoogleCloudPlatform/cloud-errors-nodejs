@@ -15,7 +15,7 @@
  */
 
 var test = require('tape');
-var RequestInformationContainer = require('../../lib/classes/request-information-container.js');
+var RequestInformationContainer = require('../../src/classes/request-information-container.js');
 var Fuzzer = require('../../utils/fuzzer.js');
 
 test(

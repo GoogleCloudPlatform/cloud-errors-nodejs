@@ -15,7 +15,7 @@
  */
 
 var test = require('tape');
-var CustomStackTrace = require('../../lib/classes/custom-stack-trace.js');
+var CustomStackTrace = require('../../src/classes/custom-stack-trace.js');
 test(
   'Fuzzing the CustomStackTrace class'
   , function ( t ) {

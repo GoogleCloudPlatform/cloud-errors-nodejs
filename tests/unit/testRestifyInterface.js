@@ -16,7 +16,7 @@
 
 var EventEmitter = require('events').EventEmitter;
 var test = require('tape');
-var restifyInterface = require('../../lib/interfaces/restify.js');
+var restifyInterface = require('../../src/interfaces/restify.js');
 var UNCAUGHT_EVENT = 'uncaughtException';
 
 // node v0.12 compatibility

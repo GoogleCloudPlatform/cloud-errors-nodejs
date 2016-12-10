@@ -15,8 +15,8 @@
  */
 
 var test = require('tape');
-var extractFromObject = require('../../lib/error-extractors/object.js');
-var ErrorMessage = require('../../lib/classes/error-message.js');
+var extractFromObject = require('../../src/error-extractors/object.js');
+var ErrorMessage = require('../../src/classes/error-message.js');
 
 test(
   'Test Object Extraction Message'

@@ -23,17 +23,17 @@ try {
   useKoa = false;
 }
 
-var Configuration = require('./lib/configuration.js');
-var AuthClient = require('./lib/google-apis/auth-client.js');
+var Configuration = require('./src/configuration.js');
+var AuthClient = require('./src/google-apis/auth-client.js');
 // Begin error reporting interfaces
 
-var koa = useKoa ? require('./lib/interfaces/koa.js') : null;
-var hapi = require('./lib/interfaces/hapi.js');
-var manual = require('./lib/interfaces/manual.js');
-var express = require('./lib/interfaces/express.js');
-var restify = require('./lib/interfaces/restify');
-var uncaughtException = require('./lib/interfaces/uncaught.js');
-var createLogger = require('./lib/logger.js');
+var koa = useKoa ? require('./src/interfaces/koa.js') : null;
+var hapi = require('./src/interfaces/hapi.js');
+var manual = require('./src/interfaces/manual.js');
+var express = require('./src/interfaces/express.js');
+var restify = require('./src/interfaces/restify');
+var uncaughtException = require('./src/interfaces/uncaught.js');
+var createLogger = require('./src/logger.js');
 
 /**
  * @typedef ConfigurationOptions

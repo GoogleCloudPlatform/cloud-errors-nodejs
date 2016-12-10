@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-var Configuration = require('../../lib/configuration.js');
+var Configuration = require('../../src/configuration.js');
 
 var FakeConfiguration = function(config) {
   return Configuration.call(this, config, { warn: function () {} });

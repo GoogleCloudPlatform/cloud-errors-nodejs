@@ -15,9 +15,9 @@
  */
 
 var test = require('tape');
-var ErrorMessage = require('../../lib/classes/error-message.js');
-var handleNumberAsError = require('../../lib/error-handlers/number.js');
-var errorClassParsingUtils = require('../../lib/error-parsing-utils.js');
+var ErrorMessage = require('../../src/classes/error-message.js');
+var handleNumberAsError = require('../../src/error-handlers/number.js');
+var errorClassParsingUtils = require('../../src/error-parsing-utils.js');
 
 test(
   'Given variable inputs and input-types in the handleNumberAsError handler'

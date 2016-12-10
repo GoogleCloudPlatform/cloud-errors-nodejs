@@ -17,7 +17,7 @@
 'use strict';
 var test = require('tape');
 var lodash = require('lodash');
-var createLogger = require('../../lib/logger.js');
+var createLogger = require('../../src/logger.js');
 
 test('Initializing the logger', function (t) {
   var oldEnv = process.env.GCLOUD_ERRORS_LOGLEVEL;

@@ -15,8 +15,8 @@
  */
 
 var test = require('tape');
-var extractFromErrorClass = require('../../lib/error-extractors/error.js');
-var ErrorMessage = require('../../lib/classes/error-message.js');
+var extractFromErrorClass = require('../../src/error-extractors/error.js');
+var ErrorMessage = require('../../src/classes/error-message.js');
 
 test(
   'Test Error Class Extraction Message'

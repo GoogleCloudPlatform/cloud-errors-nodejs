@@ -15,10 +15,10 @@
  */
 
 var test = require('tape');
-var manual = require('../../lib/interfaces/manual.js');
+var manual = require('../../src/interfaces/manual.js');
 var Configuration = require('../fixtures/configuration.js');
 var config = new Configuration({});
-var ErrorMessage = require('../../lib/classes/error-message.js');
+var ErrorMessage = require('../../src/classes/error-message.js');
 
 // Mocked client
 var client = {

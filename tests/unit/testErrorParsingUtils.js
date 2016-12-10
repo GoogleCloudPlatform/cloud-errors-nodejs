@@ -15,8 +15,8 @@
  */
 
 var test = require('tape');
-var errorClassParsingUtils = require('../../lib/error-parsing-utils.js');
-var CustomStackTrace = require('../../lib/classes/custom-stack-trace.js');
+var errorClassParsingUtils = require('../../src/error-parsing-utils.js');
+var CustomStackTrace = require('../../src/classes/custom-stack-trace.js');
 
 test(
   'Test error parsing utils formatting stack traces'

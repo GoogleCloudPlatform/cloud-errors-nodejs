@@ -17,8 +17,8 @@
 var test = require('tape');
 var lodash = require('lodash');
 var merge = lodash.merge;
-var expressInterface = require('../../lib/interfaces/express.js');
-var ErrorMessage = require('../../lib/classes/error-message.js');
+var expressInterface = require('../../src/interfaces/express.js');
+var ErrorMessage = require('../../src/classes/error-message.js');
 var Fuzzer = require('../../utils/fuzzer.js');
 var Configuration = require('../fixtures/configuration.js');
 

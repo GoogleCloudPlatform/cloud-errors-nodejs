@@ -15,7 +15,7 @@
  */
 
 var test = require('tape');
-var hapiRequestInformationExtractor = require('../../lib/request-extractors/hapi.js');
+var hapiRequestInformationExtractor = require('../../src/request-extractors/hapi.js');
 var Fuzzer = require('../../utils/fuzzer.js');
 
 test(

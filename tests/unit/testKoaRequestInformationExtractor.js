@@ -15,7 +15,7 @@
  */
 
 var test = require('tape');
-var koaRequestInformationExtractor = require('../../lib/request-extractors/koa.js');
+var koaRequestInformationExtractor = require('../../src/request-extractors/koa.js');
 var Fuzzer = require('../../utils/fuzzer.js');
 
 test(

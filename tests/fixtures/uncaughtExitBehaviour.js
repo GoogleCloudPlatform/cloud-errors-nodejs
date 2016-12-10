@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-var uncaughtSetup = require('../../lib/interfaces/uncaught.js');
+var uncaughtSetup = require('../../src/interfaces/uncaught.js');
 var test = require('tape');
 var nock = require('nock');
 var isString = require('lodash').isString;
 var Configuration = require('../fixtures/configuration.js');
-var RequestHandler = require('../../lib/google-apis/auth-client.js');
+var RequestHandler = require('../../src/google-apis/auth-client.js');
 var originalHandlers = process.listeners('uncaughtException');
 
 function reattachOriginalListeners ( ) {
