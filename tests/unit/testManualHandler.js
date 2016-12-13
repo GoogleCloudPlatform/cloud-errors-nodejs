@@ -17,7 +17,12 @@
 var test = require('tape');
 var manual = require('../../src/interfaces/manual.js');
 var Configuration = require('../fixtures/configuration.js');
-var config = new Configuration({});
+var createLogger = require('../../src/logger.js');
+var config = new Configuration({}, createLogger({logLevel: 4}));
+// Override credential detection for unit tests
+config.lacksCredentials = function () {
+  return false;
+}
 var ErrorMessage = require('../../src/classes/error-message.js');
 
 // Mocked client

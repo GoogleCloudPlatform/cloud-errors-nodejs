@@ -18,6 +18,8 @@ var EventEmitter = require('events').EventEmitter;
 var test = require('tape');
 var restifyInterface = require('../../src/interfaces/restify.js');
 var UNCAUGHT_EVENT = 'uncaughtException';
+var Configuration = require('../fixtures/configuration.js');
+var createLogger = require('../../src/logger.js');
 
 // node v0.12 compatibility
 if (!EventEmitter.prototype.listenerCount) {
@@ -32,7 +34,13 @@ test('Attachment of the server object to uncaughtException', function (t) {
   t.deepEqual(ee.listenerCount(UNCAUGHT_EVENT), 0,
     'Listeners on event should be zero');
   // return the bound function which the user will actually interface with
-  var errorHandlerInstance = restifyInterface(null, null);
+  var stubbedConfig = new Configuration({
+      serviceContext: {
+        service: "a_test_service"
+        , version: "a_version"
+      }
+    }, createLogger({logLevel: 4}));
+  var errorHandlerInstance = restifyInterface(null, stubbedConfig);
   // execute the handler the user will use with the stubbed server instance
   errorHandlerInstance(ee);
   t.deepEqual(ee.listenerCount(UNCAUGHT_EVENT), 1,
@@ -42,7 +50,13 @@ test('Attachment of the server object to uncaughtException', function (t) {
 test('Restify request handler lifecycle events', function (t) {
   var noOp = function () {return;};
   var ee = new EventEmitter;
-  var errorHandlerInstance = restifyInterface(null, null);
+  var stubbedConfig = new Configuration({
+      serviceContext: {
+        service: "a_test_service"
+        , version: "a_version"
+      }
+    }, createLogger({logLevel: 4}));
+  var errorHandlerInstance = restifyInterface(null, stubbedConfig);
   var requestHandlerInstance = errorHandlerInstance(ee);
   // excerise the default path on invalid input to the request handler
   t.doesNotThrow(function () {
@@ -75,6 +89,9 @@ test('Restify request handler lifecycle events', function (t) {
         service: 'stub-service',
         version: 'stub-version'
       }
+    },
+    lacksCredentials: function () {
+      return false;
     }
   };
   ee.removeAllListeners();

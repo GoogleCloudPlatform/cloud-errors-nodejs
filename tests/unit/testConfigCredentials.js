@@ -64,6 +64,7 @@ test('Should use the keyFilename field of the config object', function(t) {
     nock('https://clouderrorreporting.googleapis.com/v1beta1/projects')
       .post('/0/events:report', function() {
         t.true(scope.isDone());
+        nock.enableNetConnect();
         nock.cleanAll();
         server.close();
         reattachOriginalListeners();
@@ -106,6 +107,7 @@ test('should use the credentials field of the config object', function(t) {
     nock('https://clouderrorreporting.googleapis.com/v1beta1/projects')
       .post('/0/events:report', function() {
         t.true(scope.isDone());
+        nock.enableNetConnect();
         nock.cleanAll();
         server.close();
         reattachOriginalListeners();
@@ -161,6 +163,7 @@ test('Should ignore credentials if keyFilename is provided', function(t) {
     nock('https://clouderrorreporting.googleapis.com/v1beta1/projects')
       .post('/0/events:report', function() {
         t.true(scope.isDone());
+        nock.enableNetConnect();
         nock.cleanAll();
         server.close();
         reattachOriginalListeners();

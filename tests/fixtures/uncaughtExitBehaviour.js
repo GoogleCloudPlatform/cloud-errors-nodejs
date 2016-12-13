@@ -17,6 +17,7 @@
 var uncaughtSetup = require('../../src/interfaces/uncaught.js');
 var test = require('tape');
 var nock = require('nock');
+var createLogger = require('../../lib/logger.js');
 var isString = require('lodash').isString;
 var Configuration = require('../fixtures/configuration.js');
 var RequestHandler = require('../../src/google-apis/auth-client.js');
@@ -47,7 +48,8 @@ test('Sending behavior when an uncaughtException is encountered', function (t) {
     t.end();
     return {success: true};
   });
-  var cfg = new Configuration({reportUncaughtExceptions: true});
+  var cfg = new Configuration({reportUncaughtExceptions: true},
+    createLogger({logLevel: 4}));
   var client = new RequestHandler(cfg);
   var uncaught = uncaughtSetup(client, cfg);
   setImmediate(function () {

@@ -21,6 +21,7 @@ var expressInterface = require('../../src/interfaces/express.js');
 var ErrorMessage = require('../../src/classes/error-message.js');
 var Fuzzer = require('../../utils/fuzzer.js');
 var Configuration = require('../fixtures/configuration.js');
+var createLogger = require('../../src/logger.js');
 
 test(
   "Given invalid, variable input the express interface handler setup should not throw errors"
@@ -40,34 +41,6 @@ test(
       }
       , undefined
       , "The express interface handler setup should not throw when given invalid types"
-    );
-
-    t.end();
-  }
-);
-
-test(
-  [
-    "Given invalid setup variables from the handler setup, the bound express"
-    , "error handler should still not throw when given invalid input"
-  ].join(" ")
-  , function ( t ) {
-
-    var f = new Fuzzer();
-    var invalidBoundHandler = expressInterface();
-
-    var cbFn = function ( returnValue ) {
-
-      t.assert(
-        returnValue instanceof ErrorMessage
-        , "The return value should be an instance of the ErrorMessage class"
-      );
-    }
-
-    f.fuzzFunctionForTypes(
-      invalidBoundHandler
-      , ["object", "object", "object", "function"]
-      , cbFn
     );
 
     t.end();
@@ -98,7 +71,7 @@ test(
         service: "a_test_service"
         , version: "a_version"
       }
-    });
+    }, createLogger({logLevel: 4}));
     var testError = new Error("This is a test");
 
     var validBoundHandler = expressInterface(stubbedClient, stubbedConfig);

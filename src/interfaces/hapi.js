@@ -81,7 +81,9 @@ function makeHapiPlugin(client, config) {
         server.on('request-error', function(req, err) {
           var em = hapiErrorHandler(req, err, config);
 
-          client.sendError(em);
+          if (!config.lacksCredentials()) {
+            client.sendError(em);
+          }
         });
       }
 
@@ -94,7 +96,9 @@ function makeHapiPlugin(client, config) {
             em = hapiErrorHandler(request, new Error(request.response.message),
                                   config);
 
-            client.sendError(em);
+            if (!config.lacksCredentials()) {                     
+              client.sendError(em);
+            }
           }
 
           if (isObject(reply) && isFunction(reply.continue)) {

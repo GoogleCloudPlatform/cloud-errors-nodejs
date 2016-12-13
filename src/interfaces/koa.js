@@ -48,6 +48,9 @@ function koaErrorHandler(client, config) {
 
       yield next;
     } catch (err) {
+      if (config.lacksCredentials()) {
+        return;
+      }
 
       em = new ErrorMessage()
                .consumeRequestInformation(

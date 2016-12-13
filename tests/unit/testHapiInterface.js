@@ -24,6 +24,7 @@ var ErrorMessage = require('../../src/classes/error-message.js');
 var Fuzzer = require('../../utils/fuzzer.js');
 var EventEmitter = require('events').EventEmitter;
 var Configuration = require('../fixtures/configuration.js');
+var createLogger = require('../../src/logger.js');
 
 test(
   "Given invalid, variable input the hapi interface handler setup should not throw errors"
@@ -122,7 +123,8 @@ test(
         }
       };
 
-      var plugin = hapiInterface(fakeClient, null);
+      var plugin = hapiInterface(fakeClient, new Configuration({serviceContext: { service: "1", version: "2" }},
+        createLogger({logLevel: 4})));
 
       plugin.register(fakeServer, null, null, null);
 
@@ -147,7 +149,8 @@ test(
         t.pass("The sendError function should be emitted when the onPreResponse event is emitted");
       };
 
-      var testConfig = new Configuration({serviceContext: { service: "1", version: "2"  }});
+      var testConfig = new Configuration({serviceContext: { service: "1", version: "2"  }},
+        createLogger({logLevel: 4}));
       plugin = hapiInterface(fakeClient, testConfig);
 
       plugin.register(fakeServer, null, function ( errMsg ) {

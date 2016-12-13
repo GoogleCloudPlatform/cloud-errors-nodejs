@@ -57,7 +57,7 @@ function handlerSetup(client, config) {
     setTimeout(handleProcessExit, 2000);
   }
 
-  if (!config.getReportUncaughtExceptions()) {
+  if (!config.getReportUncaughtExceptions() || config.lacksCredentials()) {
     // Do not attach a listener to the process
     return null;
   }

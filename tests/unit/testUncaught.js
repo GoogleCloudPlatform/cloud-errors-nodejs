@@ -19,6 +19,7 @@ var lodash = require('lodash');
 var isString = lodash.isString;
 var uncaughtSetup = require('../../src/interfaces/uncaught.js');
 var Configuration = require('../fixtures/configuration.js');
+var createLogger = require('../../src/logger.js');
 var originalHandlers = process.listeners('uncaughtException');
 var fork = require('child_process').fork;
 
@@ -31,9 +32,13 @@ function reattachOriginalListeners ( ) {
 // Returns a Configuration object with given value for reportUncaughtExceptions,
 // and dummy logger
 function getConfig(reportUncaughtExceptions) {
-  return new Configuration({
+  var c = new Configuration({
     reportUncaughtExceptions: reportUncaughtExceptions
-  });
+  }, createLogger({logLevel: 4}));
+  c.lacksCredentials = function () {
+    return false;
+  };
+  return c;
 }
 
 test('Uncaught handler setup', function (t) {
@@ -60,7 +65,7 @@ test('Uncaught handler setup', function (t) {
 test('Test uncaught shutdown behavior', function (t) {
   if (!isString(process.env.GOOGLE_APPLICATION_CREDENTIALS)
     || !isString(process.env.GCLOUD_PROJECT)) {
-    t.skip('Skipping uncaught fixture test because environment variables' +
+    t.skip('Skipping uncaught fixture test because environment variables ' +
       'are not set');
     t.end();
     return;
