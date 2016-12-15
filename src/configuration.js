@@ -200,10 +200,41 @@ var Configuration = function(givenConfig, logger) {
  * @returns {Undefined} - does not return anything
  */
 Configuration.prototype._checkLocalServiceContext = function() {
-  var gaeModuleName = env.GAE_MODULE_NAME;
-  var gaeModuleVer = env.GAE_MODULE_VERSION;
-  this._serviceContext.service = isString(gaeModuleName) ? gaeModuleName : '';
-  this._serviceContext.version = isString(gaeModuleVer) ? gaeModuleVer : '';
+  // Note: The GAE_MODULE_NAME environment variable is set on GAE.
+  //       If the code is, in particular, running on GCF, then the 
+  //       FUNCTION_NAME environment variable is set.
+  //
+  // To determine the service name to use:
+  //   If the user specified a service name it should be used, otherwise 
+  //   if the FUNCTION_NAME environment variable is set (indicating that the 
+  //   code is running on GCF) then the FUNCTION_NAME value should be used as 
+  //   the service name.  If neither of these conditions are true, the 
+  //   value of the GAE_MODULE_NAME environment variable should be used as the 
+  //   service name.
+  //
+  // To determine the service version to use:
+  //   If the user species a version, then that version will be used.
+  //   Otherwise, the value of the environment variable GAE_MODULE_VERSION
+  //   will be used if and only if the FUNCTION_NAME environment variable is
+  //   not set.
+  var service;
+  var version;
+
+  if (env.FUNCTION_NAME){
+    service = env.FUNCTION_NAME;
+  }
+  else if (env.GAE_SERVICE){
+    service = env.GAE_SERVICE;
+    version = env.GAE_VERSION;
+  }
+  else if (env.GAE_MODULE_NAME){
+    service = env.GAE_MODULE_NAME;
+    version = env.GAE_MODULE_VERSION;
+  }
+
+  this._serviceContext.service = isString(service) ? service : 'node';
+  this._serviceContext.version = isString(version) ? version : undefined;
+
   if (isPlainObject(this._givenConfiguration.serviceContext)) {
     if (isString(this._givenConfiguration.serviceContext.service)) {
       this._serviceContext.service = 

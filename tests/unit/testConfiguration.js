@@ -21,7 +21,7 @@ var isNumber = lodash.isNumber;
 var Configuration = require('../fixtures/configuration.js');
 var version = require('../../package.json').version;
 var Fuzzer = require('../../utils/fuzzer.js');
-var level = process.env.GCLOUD_DEBUG_LOGLEVEL;
+var level = process.env.GCLOUD_ERRORS_LOGLEVEL;
 var logger = require('../../src/logger.js')({
   logLevel: isNumber(level) ? level : 4
 });
@@ -65,8 +65,8 @@ test(
     t.deepEqual(c._projectId, null);
     t.deepEqual(c._key, null);
     t.deepEqual(c.getKey(), null);
-    t.deepEqual(c._serviceContext, {service: '', version: ''});
-    t.deepEqual(c.getServiceContext(), {service: '', version: ''});
+    t.deepEqual(c._serviceContext, {service: 'node', version: undefined});
+    t.deepEqual(c.getServiceContext(), {service: 'node', version: undefined});
     t.deepEqual(c._version, version);
     t.deepEqual(c.getVersion(), version);
     stubConfig.ignoreEnvironmentCheck = true;
