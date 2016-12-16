@@ -67,6 +67,7 @@ var createLogger = require('./src/logger.js');
  *  Reporting
  */
 
+// TODO: Update this documentation
 /**
  * The entry point for initializing the Error Reporting Middleware. This
  * function will invoke configuration gathering and attempt to create a API
@@ -76,10 +77,13 @@ var createLogger = require('./src/logger.js');
  * with express via the `express` function property.
  * @function initConfiguration
  * @param {ConfigurationOptions} initConfiguration - the desired project/error
- *  reporting configuration
- * @returns {ApplicationErrorReportingInterface} - The error reporting interface
+ *     reporting configuration
  */
-function initializeClientAndInterfaces (initConfiguration) {
+function Errors(initConfiguration) {
+  if (!(this instanceof Errors)){
+    return new Errors(initConfiguration);
+  }
+
   var logger = createLogger(initConfiguration);
   var config = new Configuration(initConfiguration, logger);
   var client = new AuthClient(config, logger);
@@ -87,17 +91,15 @@ function initializeClientAndInterfaces (initConfiguration) {
   // Setup the uncaught exception handler
   uncaughtException(client, config);
 
-  // Return the application interfaces for use by the hosting application
-  var result = {
-    hapi: hapi(client, config),
-    report: manual(client, config),
-    express: express(client, config),
-    restify: restify(client, config)
-  };
+  // Build the application interfaces for use by the hosting application
+  this.hapi = hapi(client, config);
+  this.report = manual(client, config);
+  this.express = express(client, config);
+  this.restify = restify(client, config);
+
   if (koa) {
-    result.koa = koa(client, config);
+    this.koa = koa(client, config);
   }
-  return result;
 }
 
-module.exports = {start: initializeClientAndInterfaces};
+module.exports = Errors;

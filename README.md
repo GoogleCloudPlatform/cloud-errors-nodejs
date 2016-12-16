@@ -40,7 +40,7 @@ runtime configuration object is set to `true`.
 
 	```JS
 	// Require the library and initialize the error handler
-	var errors = require('@google/cloud-errors').start({
+	var errors = require('@google/cloud-errors')({
 		serviceContext: {service: 'my-service'} // not needed on Google App Engine
 	});
 
@@ -86,7 +86,7 @@ If your application is running outside of Google Cloud Platform, such as locally
 
     ```JS
     // Require and start the agent with configuration options
-    var errors = require('@google/cloud-errors').start({
+    var errors = require('@google/cloud-errors')({
       // The path to your key file:
       keyFilename: '/path/to/keyfile.json',
 
@@ -102,7 +102,7 @@ On Google App Engine, these environment variables are already set.
 The following code snippet lists all available configuration options. All configuration options are optional.
 
 ```js
-var errors = require('@google/cloud-errors').start({
+var errors = require('@google/cloud-errors')({
     projectId: 'my-project-id',
     keyFilename: '/path/to/keyfile.json',
     credentials: require('./path/to/keyfile.json'),
@@ -131,7 +131,7 @@ var errors = require('@google/cloud-errors').start({
 var express = require('express');
 var app = express();
 // Will create a errors instance based off env variables
-var errors = require('@google/cloud-errors').start();
+var errors = require('@google/cloud-errors')();
 
 app.get('/error', function ( req, res, next ) {
     res.send('Something broke!');
@@ -151,7 +151,7 @@ app.listen(3000);
 
 ```JS
 var hapi = require('hapi');
-var errors = require('@google/cloud-errors').start();
+var errors = require('@google/cloud-errors')();
 
 var server = new hapi.Server();
 server.connection({ port: 3000 });
@@ -174,7 +174,7 @@ server.register({ register: errors.hapi });
 **Note**: Koa is not supported in Node.js v0.12 unless the `--harmony` flag is enabled.
 
 ```JS
-var errors = require('@google/cloud-errors').start();
+var errors = require('@google/cloud-errors')();
 var koa = require('koa');
 var app = koa();
 
@@ -201,7 +201,7 @@ function respond(req, res, next) {
 }
 
 var restify = require('restify');
-var errors = require('@google/cloud-errors').start();
+var errors = require('@google/cloud-errors')();
 
 var server = restify.createServer();
 

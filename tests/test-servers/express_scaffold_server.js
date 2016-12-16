@@ -20,7 +20,7 @@ var lodash = require('lodash');
 var has = lodash.has;
 var express = require('express');
 var app = express();
-var errorHandler = require('../../index.js').start({
+var errorHandler = require('../../index.js')({
   onUncaughtException: 'report',
   key: process.env.STUBBED_API_KEY,
   projectId: process.env.STUBBED_PROJECT_NUM

@@ -39,7 +39,7 @@ test('Should use the keyFilename field of the config object', function(t) {
     keyFilename: path.join('tests', 'fixtures', 'gcloud-credentials.json'),
     reportUncaughtExceptions: false
   };
-  var agent = require('../..').start(config);
+  var agent = require('../..')(config);
   var app = express();
   app.use('/', function () {
     throw '0';
@@ -82,7 +82,7 @@ test('should use the credentials field of the config object', function(t) {
     credentials: require('../fixtures/gcloud-credentials.json'),
     reportUncaughtExceptions: false
   };
-  var agent = require('../..').start(config);
+  var agent = require('../..')(config);
   var app = express();
   app.use('/', function () {
     throw '0';
@@ -138,7 +138,7 @@ test('Should ignore credentials if keyFilename is provided', function(t) {
     t.notEqual(config.credentials[field],
       correctCredentials[field]);
   });
-  var agent = require('../..').start(config);
+  var agent = require('../..')(config);
   var app = express();
   app.use('/', function () {
     throw '0';

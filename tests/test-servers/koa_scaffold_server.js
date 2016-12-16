@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var errorHandler = require('../../index.js').start({
+var errorHandler = require('../../index.js')({
   onUncaughtException: 'report'
 });
 var koa = require('koa');
