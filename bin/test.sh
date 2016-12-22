@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-# fail fast
-set -e
-
 IS_TESTING_LOCALLY=false
 
 function basicSetup {
@@ -18,10 +15,6 @@ function basicTeardown {
   unset NODE_ENV
   rm -rf ./tests/configuration
 }
-
-# Ensure the basicTeardown function is called at the end of this script
-# if the script exits successfully or as a failure
-trap basicTeardown EXIT
 
 function trustedSetup {
   export GCLOUD_PROJECT=`cat ./tests/configuration/stub_project_id.txt`
@@ -74,6 +67,7 @@ function run {
     echo "Running unit suite"
     runUnitSuite
   fi
+  basicTeardown
 }
 
 while getopts "l" opt
