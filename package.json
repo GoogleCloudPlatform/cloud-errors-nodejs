@@ -1,6 +1,6 @@
 {
   "name": "@google/cloud-errors",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Node.js module for Google Stackdriver Error Reporting",
   "main": "index.js",
   "repository": "GoogleCloudPlatform/cloud-errors-nodejs",
