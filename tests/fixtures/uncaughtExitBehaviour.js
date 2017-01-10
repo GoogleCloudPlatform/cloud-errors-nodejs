@@ -15,44 +15,79 @@
  */
 
 var uncaughtSetup = require('../../src/interfaces/uncaught.js');
-var test = require('tape');
+var assert = require('assert');
 var nock = require('nock');
 var createLogger = require('../../src/logger.js');
 var isString = require('lodash').isString;
 var Configuration = require('../fixtures/configuration.js');
 var RequestHandler = require('../../src/google-apis/auth-client.js');
 var originalHandlers = process.listeners('uncaughtException');
+var UNCAUGHT  = 'uncaughtException';
+var client;
 
 function reattachOriginalListeners ( ) {
   for (var i = 0; i < originalHandlers.length; i++) {
-    process.on('uncaughtException', originalHandlers[i]);
+    process.on(UNCAUGHT, originalHandlers[i]);
   }
 }
-test('Sending behavior when an uncaughtException is encountered', function (t) {
-  process.removeAllListeners('uncaughtException');
-  if (!isString(process.env.GCLOUD_PROJECT)) {
-    t.fail("The gcloud project id (GCLOUD_PROJECT) was not set as an env variable");
-    t.end();
-    process.exit();
-  } else if (!isString(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
-    t.fail("The app credentials (GOOGLE_APPLICATION_CREDENTIALS) was not set as an env variable");
-    t.end();
-    process.exit();
-  }
-  var s = nock(
-    'https://clouderrorreporting.googleapis.com/v1beta1/projects/'+
-      process.env.GCLOUD_PROJECT
-  ).post('/events:report').once().reply(200, function () {
-    t.pass('The library should attempt to create an entry with the service');
-    reattachOriginalListeners();
-    t.end();
-    return {success: true};
+var env = {
+  NODE_ENV: process.env.NODE_ENV
+};
+function setEnv () {
+  process.env.NODE_ENV = 'production';
+}
+function restoreEnv () {
+  process.env.NODE_ENV = env.NODE_ENV;
+}
+
+describe('Uncaught Exception exit behaviour', function () {
+  var metadataUrl
+   before(function () {
+    process.removeAllListeners(UNCAUGHT);
+    if (!isString(process.env.GCLOUD_PROJECT)) {
+      // The gcloud project id (GCLOUD_PROJECT) was not set as an env variable
+      this.skip();
+      process.exit(1);
+    } else if (!isString(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
+      // The app credentials (GOOGLE_APPLICATION_CREDENTIALS) was not set as an env variable
+      this.skip();
+      process.exit(1);
+    }
+    setEnv();
   });
-  var cfg = new Configuration({reportUncaughtExceptions: true},
-    createLogger({logLevel: 4}));
-  var client = new RequestHandler(cfg);
-  var uncaught = uncaughtSetup(client, cfg);
-  setImmediate(function () {
-    throw new Error('This error was supposed to be thrown');
+  after(function () {
+    nock.cleanAll();
+    nock.enableNetConnect();
+    reattachOriginalListeners();
+    restoreEnv();
+  });
+  it('Should attempt to report the uncaught exception', function (done) {
+    var id = 'xyz';
+    var metadataId = nock(
+      'http://metadata.google.internal/computeMetadata/v1/project'
+    ).get('/project-id').times(1).reply(200, id);
+    var metadataToken = nock('https://accounts.google.com:443/o/oauth2')
+      .post('/token').query(function () {return true}).reply(200, {
+        refresh_token: 'hello',
+        access_token: 'goodbye',
+        expiry_date: new Date(9999, 1, 1)
+      });
+    this.timeout(2000);
+    var s = nock(
+      'https://clouderrorreporting.googleapis.com/v1beta1/projects/'+id
+    ).post('/events:report').once().reply(200, function () {
+      done();
+      return {success: true};
+    });
+    var cfg = new Configuration(
+      {reportUncaughtExceptions: true, projectId: 'xyz'});
+    cfg.lacksCredentials = function () {
+      return false;
+    };
+    client = new RequestHandler(cfg, createLogger({logLevel: 4}));
+    uncaughtSetup(client, cfg);
+    setTimeout(function () {
+      throw new Error('This error was supposed to be thrown');
+    }, 10);
   });
 });

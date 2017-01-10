@@ -15,9 +15,10 @@
  */
 
 'use strict';
-var test = require('tape');
+var assert = require('assert');
 var lodash = require('lodash');
 var isNumber = lodash.isNumber;
+var merge = lodash.merge;
 var Configuration = require('../fixtures/configuration.js');
 var version = require('../../package.json').version;
 var Fuzzer = require('../../utils/fuzzer.js');
@@ -26,324 +27,352 @@ var logger = require('../../src/logger.js')({
   logLevel: isNumber(level) ? level : 4
 });
 var nock = require('nock');
+
 var METADATA_URL = 'http://metadata.google.internal/computeMetadata/v1/project';
 
-test(
-  'Initing an instance of Configuration should return a Configuration instance',
-  function (t) {
-    var c;
-    var f = new Fuzzer();
-    var stubConfig = {test: true};
-    var oldEnv = process.env.NODE_ENV;
-    var oldProject = process.env.GCLOUD_PROJECT;
-    t.deepEqual(typeof Configuration, 'function');
-    f.fuzzFunctionForTypes(
-      function (givenConfigFuzz) {
-        c = new Configuration(givenConfigFuzz, logger);
-        t.deepEqual(c._givenConfiguration, {}, 
-          "The _givenConfiguration property should remain null if given "+
-          "invalid input"
-        );
-      },
-      ["object"]
-    );
-    process.env.NODE_ENV = 'development';
-    delete process.env.GCLOUD_PROJECT;
-    t.doesNotThrow(function () { 
-      c = new Configuration(stubConfig, logger); 
+var originalHandlers = process.listeners('uncaughtException');
+
+function reattachOriginalListeners() {
+  for (var i = 0; i < originalHandlers.length; i++) {
+    process.on('uncaughtException', originalHandlers[i]);
+  }
+}
+
+process.removeAllListeners('uncaughtException');
+var env = {
+  NODE_ENV: process.env.NODE_ENV,
+  GCLOUD_PROJECT: process.env.GCLOUD_PROJECT,
+  GAE_MODULE_NAME: process.env.GAE_MODULE_NAME,
+  GAE_MODULE_VERSION: process.env.GAE_MODULE_VERSION
+};
+function sterilizeEnv () {
+  delete process.env.NODE_ENV;
+  delete process.env.GCLOUD_PROJECT;
+  delete process.env.GAE_MODULE_NAME;
+  delete process.env.GAE_MODULE_VERSION;
+}
+function restoreEnv () {
+  process.env.NODE_ENV = env.NODE_ENV;
+  process.env.GCLOUD_PROJECT = env.GCLOUD_PROJECT;
+  process.env.GAE_MODULE_NAME = env.GAE_MODULE_NAME;
+  process.env.GAE_MODULE_VERSION = env.GAE_MODULE_VERSION;
+}
+function createDeadMetadataService () {
+  return nock(METADATA_URL).get('/project-id').times(1).reply(500);
+}
+
+describe('Configuration class', function () {
+  before(function () {sterilizeEnv();});
+  after(function () {restoreEnv();});
+  describe(
+    'Initialization',
+    function () {
+      var f = new Fuzzer();
+      var stubConfig = {test: true};
+      describe('fuzzing the constructor', function () {
+        it('Should return default values', function () {
+          var c;
+          f.fuzzFunctionForTypes(
+            function (givenConfigFuzz) {
+              c = new Configuration(givenConfigFuzz, logger);
+              assert.deepEqual(c._givenConfiguration, {});
+            },
+            ['object']
+          );
+        });
+      });
+      describe('valid config and default values', function () {
+        var c;
+        before(function () {process.env.NODE_ENV = 'development';});
+        after(function () {sterilizeEnv();});
+        it('Should not throw with a valid configuration', function () {
+          assert.doesNotThrow(function () {
+            c = new Configuration(stubConfig, logger);
+          });
+        });
+        it('Should have a property reflecting the config argument', function () {
+          assert.deepEqual(c._givenConfiguration, stubConfig);
+        });
+        it('Should reportUncaughtExceptions', function () {
+          assert.strictEqual(c.getReportUncaughtExceptions(), true);
+        });
+        it('Should not reportUncaughtExceptions', function () {
+          assert.strictEqual(c.getShouldReportErrorsToAPI(), false);
+        });
+        it('Should not have a project id', function () {
+          assert.strictEqual(c._projectId, null);
+        });
+        it('Should not have a key', function () {
+          assert.strictEqual(c.getKey(), null);
+        });
+        it('Should have a default service context', function () {
+          assert.deepEqual(c.getServiceContext(),
+            {service: 'node', version: undefined});
+        });
+        it('Should have a version corresponding to package.json', function () {
+            assert.strictEqual(c.getVersion(), version);
+        });
+      });
+      describe('with ignoreEnvironmentCheck', function () {
+        var conf = merge({}, stubConfig, {ignoreEnvironmentCheck: true});
+        var c = new Configuration(conf, logger);
+        it('Should reportErrorsToAPI', function () {
+          assert.strictEqual(c.getShouldReportErrorsToAPI(), true);
+        });
+      });
+      describe('without ignoreEnvironmentCheck', function () {
+        describe('Exception behvaiour without proper resources', function () {
+          var c;
+          before(function () {
+            sterilizeEnv();
+            c = new Configuration(stubConfig, logger);
+          });
+          after(function () {sterilizeEnv();});
+          it('Should error without proper config resource', function (done) {
+            this.timeout(3500);
+            c.getProjectId(function (err, id) {
+              assert(err instanceof Error);
+              assert.strictEqual(id, null);
+              done();
+            });
+          });
+        });
+        describe('report behaviour with production env', function () {
+          var c;
+          before(function () {
+            sterilizeEnv();
+            process.env.NODE_ENV = 'production';
+            c = new Configuration(undefined, logger);
+          });
+          after(function () {sterilizeEnv();});
+          it('Should reportErrorsToAPI', function () {
+            assert.strictEqual(c.getShouldReportErrorsToAPI(), true);
+          });
+        });
+        describe('exception behaviour', function () {
+          it('Should throw if invalid type for reportUncaughtExceptions', function () {
+            assert.throws(function () {
+              new Configuration({reportUncaughtExceptions: 1}, logger);
+            });
+          });
+          it('Should throw if invalid type for key', function () {
+            assert.throws(function () {
+              new Configuration({key: null}, logger);
+            });
+          });
+          it('Should throw if invalid type for ignoreEnvironmentCheck', function () {
+            assert.throws(function () {
+              new Configuration({ignoreEnvironmentCheck: null}, logger);
+            });
+          });
+          it('Should throw if invalid type for serviceContext.service', function () {
+            assert.throws(function () {
+              new Configuration({serviceContext: {service: false}}, logger);
+            });
+          });
+          it('Should throw if invalid type for serviceContext.version', function () {
+            assert.throws(function () {
+              new Configuration({serviceContext: {version: true}}, logger);
+            });
+          });
+          it('Should not throw given an empty object for serviceContext', function () {
+            assert.doesNotThrow(function () {
+              new Configuration({serviceContext: {}}, logger);
+            });
+          });
+        });
+      });
+    }
+  );
+  describe('Configuration resource aquisition', function () {
+    before(function () {sterilizeEnv();});
+    describe('project id from configuration instance', function () {
+      var pi = 'test';
+      var serve, c;
+      before(function () {
+        serve = createDeadMetadataService();
+        c = new Configuration({projectId: pi}, logger);
+      });
+      after(function () {nock.cleanAll();});
+      it('Should return the project id', function (done) {
+        c.getProjectId(function (err, id) {
+          assert.strictEqual(err, null);
+          assert.strictEqual(id, pi);
+          done();
+        });
+      });
     });
-    t.deepEqual(c._givenConfiguration, stubConfig, 
-      "Given a valid configuration the instance should assign it as the value "+
-      "to the _givenConfiguration property"
-    );
-    t.deepEqual(c._reportUncaughtExceptions, true);
-    t.deepEqual(c.getReportUncaughtExceptions(), true);
-    t.deepEqual(c._shouldReportErrorsToAPI, false, 
-      "_shouldReportErrorsToAPI should init to false if env !== production "+
-      "and the force flag is not set tot true");
-    t.deepEqual(c.getShouldReportErrorsToAPI(), false);
-    t.deepEqual(c._projectId, null);
-    t.deepEqual(c._key, null);
-    t.deepEqual(c.getKey(), null);
-    t.deepEqual(c._serviceContext, {service: 'node', version: undefined});
-    t.deepEqual(c.getServiceContext(), {service: 'node', version: undefined});
-    t.deepEqual(c._version, version);
-    t.deepEqual(c.getVersion(), version);
-    stubConfig.ignoreEnvironmentCheck = true;
-    c = new Configuration(stubConfig, logger);
-    t.deepEqual(c.getShouldReportErrorsToAPI(), true, 
-      'ignoreEnvironmentCheck flag should set the report errors to api flag '+
-      'true even if env is not set production');
-    delete stubConfig.ignoreEnvironmentCheck;
-    c = new Configuration(stubConfig, logger);
-    c.getProjectId(function (err, id) {
-      t.assert(err instanceof Error);
-      t.deepEqual(id, null);
-      process.env.NODE_ENV = 'production';
-      c = new Configuration(undefined, logger);
-      t.deepEqual(c._shouldReportErrorsToAPI, true, 
-        "_shouldReportErrorsToAPI should init to true if env === production");
-      t.deepEqual(c.getShouldReportErrorsToAPI(), true);
-      process.env.NODE_ENV = oldEnv;
-      process.env.GCLOUD_PROJECT = oldProject;
-      t.end();
+    describe('project number from configuration instance', function () {
+      var pn = 1234;
+      var serve, c;
+      before(function () {
+        sterilizeEnv();
+        serve = createDeadMetadataService();
+        c = new Configuration({projectId: pn}, logger);
+      });
+      after(function () {nock.cleanAll(); sterilizeEnv();});
+      it('Should return the project number', function (done) {
+        c.getProjectId(function (err, id) {
+          assert.strictEqual(err, null);
+          assert.strictEqual(pn.toString(), id);
+          done();
+        });
+      });
     });
-    t.throws(c.getProjectId, undefined, 'Should throw not given a callback parameter');
-    t.throws(function () { new Configuration({reportUncaughtExceptions: 1}, logger) },
-      'Should throw when not given a boolean for reportUncaughtExceptions');
-    t.throws(function () { new Configuration({key: null}, logger) },
-      'Should throw when not given a string for reportUncaughtExceptions');
-    t.throws(function () { new Configuration({serviceContext: {service: false}}, logger) },
-      'Should throw when not given a string for serviceContext.service');  
-    t.throws(function () { new Configuration({serviceContext: {version: true}}, logger) },
-      'Should throw when not given a string for serviceContext.version');
-    t.throws(function () {new Configuration({ignoreEnvironmentCheck: null}, logger)},
-      'Should throw if given an invalid type for ignoreEnvironmentCheck')
-    t.doesNotThrow(function () { new Configuration({serviceContext: {}}, logger) },
-      'Should not throw when given an empty object');
-  }
-);
-
-test(
-  'Testing basic init process on a Configuration instance',
-  function (t) {
-    var oldProject = process.env.GCLOUD_PROJECT;
-    delete process.env.GCLOUD_PROJECT;
-    var s = nock(METADATA_URL).get('/project-id').times(1).reply(500);
-    var c = new Configuration(undefined, logger);
-    c.getProjectId(function (err, id) {
-      t.assert(err instanceof Error);
-      t.deepEqual(id, null, 'The returned value for project number should be null');
-      s.done();
-      process.env.GCLOUD_PROJECT = oldProject;
-      t.end();
+  });
+  describe('Exception behaviour', function () {
+    describe('While lacking a project id', function () {
+      var serve, c;
+      before(function () {
+        sterilizeEnv();
+        serve = createDeadMetadataService();
+        c = new Configuration(undefined, logger);
+      });
+      after(function () {
+        nock.cleanAll();
+        sterilizeEnv();
+      });
+      it('Should error', function (done) {
+        c.getProjectId(function (err, id) {
+          assert(err instanceof Error);
+          assert.strictEqual(id, null);
+          done();
+        });
+      });
     });
-  }
-);
-
-test(
-  'Testing local value assignment in init process on a Configuration instance '+
-  'for project number',
-  function (t) {
-    var oldProject = process.env.GCLOUD_PROJECT;
-    delete process.env.GCLOUD_PROJECT;
-    var projectNumber = 1234;
-    var c = new Configuration({projectId: projectNumber}, logger);
-    var s = nock(METADATA_URL).get('/project-id').times(1).reply(500);
-    c.getProjectId(function (err, id) {
-      t.deepEqual(err, null);
-      t.deepEqual(id, projectNumber.toString());
-      s.done();
-      process.env.GCLOUD_PROJECT = oldProject;
-      t.end();
+    describe('Invalid type for projectId in runtime config', function () {
+      var serve, c;
+      before(function () {
+        sterilizeEnv();
+        serve = createDeadMetadataService();
+        c = new Configuration({projectId: null}, logger);
+      });
+      after(function () {
+        nock.cleanAll();
+        sterilizeEnv();
+      });
+      it('Should error', function (done) {
+        c.getProjectId(function (err, id) {
+          assert(err instanceof Error);
+          assert.strictEqual(id, null);
+          done();
+        });
+      });
     });
-  }
-);
-
-test(
-  'Testing local value assignment in init process on a Configuration instance '+
-  'for project number when invalid - should throw',
-  function (t) {
-    var oldProject = process.env.GCLOUD_PROJECT;
-    delete process.env.GCLOUD_PROJECT;
-    var projectNumber = null;
-    var c = new Configuration({projectId: projectNumber}, logger);
-    var s = nock(METADATA_URL).get('/project-id').times(1).reply(500);
-    c.getProjectId(function (err, id) {
-      t.assert(err instanceof Error);
-      t.deepEqual(id, null);
-      s.done();
-      process.env.GCLOUD_PROJECT = oldProject;
-      t.end();
+  });
+  describe('Resource aquisition', function () {
+    after(function () {
+      /*
+       * !! IMPORTANT !!
+       * THE restoreEnv FUNCTION SHOULD BE CALLED LAST AS THIS TEST FILE EXITS
+       * AND SHOULD THEREFORE BE THE LAST THING TO EXECUTE FROM THIS FILE.
+       * !! IMPORTANT !!
+       */
+      restoreEnv();
     });
-  }
-);
-
-test(
-  'Testing local value assignment in init process on a Configuration instance '+
-  'for project number as string',
-  function (t) {
-    var oldProject = process.env.GCLOUD_PROJECT;
-    delete process.env.GCLOUD_PROJECT;
-    var projectNumber = '1234';
-    var c = new Configuration({projectId: projectNumber}, logger);
-    var s = nock(METADATA_URL).get('/project-id').times(1).reply(500);
-    c.getProjectId(function (err, id) {
-      t.deepEqual(null, err);
-      t.deepEqual(id, projectNumber);
-      s.done();
-      process.env.GCLOUD_PROJECT = oldProject;
-      t.end();
+    describe('via env', function () {
+      before(function() {sterilizeEnv();})
+      afterEach(function () {sterilizeEnv();});
+      describe('projectId', function () {
+        var c;
+        var projectId = 'test-xyz';
+        before(function () {
+          process.env.GCLOUD_PROJECT = projectId;
+          c = new Configuration(undefined, logger);
+        });
+        it('Should assign', function (done) {
+          c.getProjectId(function (err, id) {
+            assert.strictEqual(err, null);
+            assert.strictEqual(id, projectId);
+            done();
+          });
+        });
+      });
+      describe('serviceContext', function () {
+        var c;
+        var projectId = 'test-abc';
+        var serviceContext = {
+          service: 'test',
+          version: '1.x'
+        };
+        before(function () {
+          process.env.GCLOUD_PROJECT = projectId;
+          process.env.GAE_MODULE_NAME = serviceContext.service;
+          process.env.GAE_MODULE_VERSION = serviceContext.version;
+          c = new Configuration(undefined, logger);
+        });
+        it('Should assign', function () {
+          assert.deepEqual(c.getServiceContext(), serviceContext);
+        });
+      });
     });
-  }
-);
-
-test(
-  'Testing basic init behaviours',
-  function (t) {
-    var c = new Configuration(undefined, logger);
-    var pn = '123';
-    var pi = 'test';
-    c._projectId = pi;
-    c._checkLocalProjectId(function (err, id) {
-      t.deepEqual(err, null);
-      t.deepEqual(pi, id);
+    describe('via runtime configuration', function () {
+      before(function () {sterilizeEnv();});
+      describe('serviceContext', function () {
+        var c;
+        var projectId = 'xyz123';
+        var serviceContext = {
+          service: 'evaluation',
+          version: '2.x'
+        };
+        before(function () {
+          c = new Configuration({
+            projectId: projectId,
+            serviceContext: serviceContext
+          });
+        });
+        it('Should assign', function () {
+          assert.deepEqual(c.getServiceContext(), serviceContext);
+        });
+      });
+      describe('api key', function () {
+        var c;
+        var projectId = '987abc';
+        var key = '1337-api-key';
+        before(function () {
+          c = new Configuration({
+            key: key,
+            projectId: projectId
+          }, logger);
+        });
+        it('Should assign', function () {
+          assert.strictEqual(c.getKey(), key);
+        });
+      });
+      describe('reportUncaughtExceptions', function () {
+        var c;
+        var projectId = '123-xyz';
+        var reportUncaughtExceptions = false;
+        before(function () {
+          c = new Configuration({
+            projectId: projectId,
+            reportUncaughtExceptions: reportUncaughtExceptions
+          });
+        });
+        it('Should assign', function () {
+          assert.strictEqual(c.getReportUncaughtExceptions(),
+            reportUncaughtExceptions);
+        });
+      });
     });
-    t.deepEqual(c._projectId, pi,
-      'The project id should not be reset by _checkLocalProjectId');
-    c.getProjectId(function (err, id) {
-      t.deepEqual(null, err);
-      t.deepEqual(id, pi,
-        'The project pi should not be reset by _checkLocalProjectNumber');
-      t.end();
+    describe('via the metadata service', function () {
+      before(function () {sterilizeEnv();});
+      describe('project id', function () {
+        var serve, c;
+        var id = '6789';
+        before(function () {
+          serve = nock(METADATA_URL).get('/project-id').times(1).reply(200, id);
+          c = new Configuration(undefined, logger);
+        });
+        it('Should assign', function (done) {
+          c.getProjectId(function (err, projectId) {
+            assert.strictEqual(err, null);
+            assert.strictEqual(id, projectId);
+            assert(serve.isDone());
+            done();
+          });
+        });
+      });
     });
-  }
-);
-
-test(
-  'Testing local value assignment in init process on a Configuration instance '+
-  'for project number in env variable',
-  function (t) {
-    var oldProject = process.env.GCLOUD_PROJECT;
-    var projectNumber = '1234';
-    process.env.GCLOUD_PROJECT = projectNumber;
-    var c = new Configuration(undefined, logger);
-    var s = nock(METADATA_URL).get('/project-id').times(1).reply(500);
-    c.getProjectId(function (err, id) {
-      t.deepEqual(null, err);
-      t.deepEqual(id, projectNumber);
-      s.done();
-      process.env.GCLOUD_PROJECT = oldProject;
-      t.end();
-    });
-  }
-);
-
-test(
-  'Testing local value assignment in init process on a Configuration instance '+
-  'for project id',
-  function (t) {
-    var oldProject = process.env.GCLOUD_PROJECT;
-    delete process.env.GCLOUD_PROJECT;
-    var projectId = 'test-123';
-    var c = new Configuration({projectId: projectId}, logger);
-    var s = nock(METADATA_URL).get('/project-id').times(1).reply(500);
-    c.getProjectId(function (err, id) {
-      t.deepEqual(err, null);
-      t.deepEqual(id, projectId);
-      s.done();
-      process.env.GCLOUD_PROJECT = oldProject;
-      t.end();
-    });
-  }
-);
-
-test(
-  'Testing local value assignment in init process on a Configuration instance '+
-  'for project id in env variable',
-  function (t) {
-    var projectId = 'test-123';
-    var oldProject = process.env.GCLOUD_PROJECT;
-    process.env.GCLOUD_PROJECT = projectId;
-    var c = new Configuration(undefined, logger);
-    c.getProjectId(function (err, id) {
-      t.deepEqual(err, null);
-      t.deepEqual(id, projectId);
-      process.env.GCLOUD_PROJECT = oldProject;
-      t.end();
-    });
-  }
-);
-
-test(
-  'Testing local value assignment in init process on a Configuration instance '+
-  'for service context',
-  function (t) {
-    var oldProject = process.env.GCLOUD_PROJECT;
-    delete process.env.GCLOUD_PROJECT;
-    var projectId = 'test-123';
-    var serv = {service: 'test', version: '1.2.x'};
-    var c = new Configuration({projectId: projectId, serviceContext: serv},
-      logger);
-    t.deepEqual(c.getServiceContext(), serv);
-    process.env.GCLOUD_PROJECT = oldProject;
-    t.end();
-  }
-);
-
-test(
-  'Testing local value assignment in init process on a Configuration instance '+
-  'for service context in env variable',
-  function (t) {
-    var projectId = 'test-123';
-    var name = 'test';
-    var ver = 'test2';
-    var oldProject = process.env.GCLOUD_PROJECT;
-    process.env.GCLOUD_PROJECT = projectId;
-    process.env.GAE_MODULE_NAME = name;
-    process.env.GAE_MODULE_VERSION = ver;
-    var c = new Configuration(undefined, logger);
-    t.deepEqual(c.getServiceContext(), {service: name, version: ver});
-    delete process.env.GCLOUD_PROJECT;
-    delete process.env.GAE_MODULE_VERSION;
-    process.env.GCLOUD_PROJECT = oldProject;
-    t.end();
-  }
-);
-
-test(
-  'Testing local value assignment in init process on a Configuration instance '+
-  'for key',
-  function (t) {
-    var projectId = 'test-123';
-    var key = '1337';
-    var c = new Configuration({key: key, projectId: projectId}, logger);
-    t.deepEqual(c.getKey(), key);
-    t.end();
-  }
-);
-
-test(
-  'Testing local value assignment in init process on a Configuration instance '+
-  'for reportUncaughtExceptions',
-  function (t) {
-    var projectId = 'test-123';
-    var key = '1337';
-    var c = new Configuration({reportUncaughtExceptions: false, 
-      projectId: projectId}, logger);
-    t.deepEqual(c.getReportUncaughtExceptions(), false);
-    t.end();
-  }
-);
-
-test(
-  'Testing service value assignment in init process on a configuration ' +
-  'instance with number as id',
-  function (t) {
-    var id = '1234';
-    var s = nock(METADATA_URL).get('/project-id').times(1)
-      .reply(200, id);
-    var c = new Configuration(undefined, logger);
-    c.getProjectId(function (err, num) {
-      t.deepEqual(err, null);
-      t.deepEqual(num, id);
-      t.end();
-    });
-  }
-);
-
-test(
-  'Testing service value assignment in init process on a configuration ' +
-  'instance with string as id',
-  function (t) {
-    var projectId = 'test-project-id';
-    var s = nock(METADATA_URL).get('/project-id').times(1)
-      .reply(200, projectId);
-    var c = new Configuration(undefined, logger);
-    c.getProjectId(function (err, id) {
-      t.deepEqual(err, null);
-      t.deepEqual(id, projectId);
-      t.end();
-    });
-  }
-);
+  });
+});

@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-var test = require('tape');
+var assert = require('assert');
 var lodash = require('lodash');
 var isString = lodash.isString;
 var uncaughtSetup = require('../../src/interfaces/uncaught.js');
 var Configuration = require('../fixtures/configuration.js');
 var createLogger = require('../../src/logger.js');
 var originalHandlers = process.listeners('uncaughtException');
-var fork = require('child_process').fork;
+var spawn = require('child_process').spawn;
 
 function reattachOriginalListeners ( ) {
   for (var i = 0; i < originalHandlers.length; i++) {
@@ -41,51 +41,55 @@ function getConfig(reportUncaughtExceptions) {
   return c;
 }
 
-test('Uncaught handler setup', function (t) {
-  t.throws(uncaughtSetup, undefined, 'Should throw given no configuration');
-  t.doesNotThrow(uncaughtSetup.bind(null, {}, getConfig(true)), undefined,
-    'Should not throw given valid configuration');
-  t.doesNotThrow(uncaughtSetup.bind(null, {}, getConfig(false)), undefined,
-    'Should not throw given valid configuration');
-  t.assert(process === uncaughtSetup({}, getConfig(true)),
-    'Should return the process on successful initialization');
-  process.removeAllListeners('uncaughtException');
-  t.deepEqual(process.listeners('uncaughtException').length, 0,
-    'There should be no listeners');
-  uncaughtSetup({}, getConfig(false));
-  t.deepEqual(process.listeners('uncaughtException').length, 0,
-    'There should be no listeners if reportUncaughtExceptions is false');
-  uncaughtSetup({}, getConfig(true));
-  t.deepEqual(process.listeners('uncaughtException').length, 1,
-    'There should be one listener if reportUncaughtExceptions is true');
-  process.removeAllListeners('uncaughtException');
-  t.end();
-});
-
-test('Test uncaught shutdown behavior', function (t) {
-  if (!isString(process.env.GOOGLE_APPLICATION_CREDENTIALS)
-    || !isString(process.env.GCLOUD_PROJECT)) {
-    t.skip('Skipping uncaught fixture test because environment variables ' +
-      'are not set');
-    t.end();
-    return;
-  }
-  var isolate = fork('./tests/fixtures/uncaughtExitBehaviour.js', null, process.env);
-  var timeout = setTimeout(function () {
-    t.fail('Should terminate before 2500ms');
-    reattachOriginalListeners();
-    t.end();
-  }, 2500);
-  isolate.on('close', function () {
-    t.pass('Should terminate before 2500ms');
-    clearTimeout(timeout);
-    reattachOriginalListeners();
-    t.end();
+describe('Uncaught exception handler behvaiour', function () {
+  var UNCAUGHT  = 'uncaughtException';
+  describe('Instantiation', function () {
+    beforeEach(function () {process.removeAllListeners(UNCAUGHT);});
+    it('Should throw without a configuration', function () {
+      assert.throws(uncaughtSetup);
+    });
+    it('Should not throw given a valid configuration', function () {
+      assert.doesNotThrow(uncaughtSetup.bind(null, {}, getConfig(false)));
+      assert.doesNotThrow(uncaughtSetup.bind(null, {}, getConfig(true)));
+    });
+    it('Should return the process object after instantiation', function () {
+      assert.strictEqual(process, uncaughtSetup({}, getConfig(true)));
+    });
+    it('Should not attach a listener to the uncaughtException event if ' +
+      'reportUncaughtExceptions is false', function () {
+        uncaughtSetup({}, getConfig(false));
+        assert.strictEqual(process.listeners(UNCAUGHT).length, 0);
+    });
+    it('Should attach a listener to the uncaughtException event if ' +
+      'reportUncaughtExceptions is true', function () {
+        uncaughtSetup({}, getConfig(true));
+        assert.strictEqual(process.listeners(UNCAUGHT).length, 1);
+    });
   });
-  isolate.on('error', function () {
-    console.log('got error:\n', arguments);
-    t.fail('Got an error in isolate');
-    reattachOriginalListeners();
-    t.end();
+  describe('Uncaught exception handling shutdown behaviour', function () {
+    before(function () {
+      if (!isString(process.env.GOOGLE_APPLICATION_CREDENTIALS)
+        || !isString(process.env.GCLOUD_PROJECT)) {
+        this.skip();
+        return;
+      }
+    });
+    after(function () {
+      reattachOriginalListeners();
+    })
+    it('Should terminate before 2500ms', function (done) {
+      var TERMINATE_MSG = 'Should terminate before 2500ms';
+      this.timeout(3500);
+      var isolate = spawn('./node_modules/mocha/bin/mocha', 
+        ['../../tests/fixtures/uncaughtExitBehaviour.js'], {env: process.env});
+      isolate.on('close', function () {
+        done();
+      });
+      isolate.on('error', function () {
+        console.log('Test isolate encountered error:', '\n', arguments);
+        assert(false, TERMINATE_MSG);
+        done();
+      });
+    });
   });
 });

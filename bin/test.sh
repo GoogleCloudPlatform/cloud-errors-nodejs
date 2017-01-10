@@ -36,23 +36,21 @@ function decryptAcceptanceCredentials {
 }
 
 function runFullSuite {
-  $(npm bin)/istanbul cover -x "fuzzer.js" \
-  $(npm bin)/tape ./tests/integration/*.js ./tests/unit/*.js \
-  ./tests/fixtures/*.js \
-  --report lcovonly -- -R spec && cat ./coverage/lcov.info \
-  | $(npm bin)/coveralls && rm -rf ./coverage
+  $(npm bin)/nyc report --reporter=text-lcov \
+  $(npm bin)/mocha ./tests/integration/*.js ./tests/unit/*.js \
+  ./tests/fixtures/*.js | \
+  $(npm bin)/coveralls coveralls && rm -rf ./coverage
 }
 
 function runUnitSuite {
-  $(npm bin)/istanbul cover -x "fuzzer.js" \
-  $(npm bin)/tape ./tests/unit/*.js --report lcovonly -- \
-  -R spec && cat ./coverage/lcov.info \
-  | $(npm bin)/coveralls && rm -rf ./coverage
+  $(npm bin)/nyc report --reporter=text-lcov \
+  $(npm bin)/mocha ./tests/unit/*.js | \
+  $(npm bin)/coveralls && rm -rf ./coverage
 }
 
 function run {
   basicSetup
-  if [ "$IS_TESTING_LOCALLY" = true ]
+  if [ "$IS_TESTING_LOCALLY" = "true" ]
   then
     echo "Running integration and unit suites in local development mode"
     runFullSuite

@@ -14,142 +14,123 @@
  * limitations under the License.
  */
 
-var test = require('tape');
+var assert = require('assert');
 var manual = require('../../src/interfaces/manual.js');
 var Configuration = require('../fixtures/configuration.js');
-var createLogger = require('../../src/logger.js');
-var config = new Configuration({}, createLogger({logLevel: 4}));
-// Override credential detection for unit tests
+var config = new Configuration({});
 config.lacksCredentials = function () {
   return false;
-}
-var ErrorMessage = require('../../src/classes/error-message.js');
-
-// Mocked client
-var client = {
-    sendError: function(e, cb) {
-    // immediately callback
-    if (cb) {
-      setImmediate(cb);
-    }
-  }
 };
-var report = manual(client, config);
+var ErrorMessage = require('../../src/classes/error-message.js');
+// var nock = require('nock');
 
-test('Test manual handler interface', function(t) {
-  t.equal(typeof report, 'function', 'should be a function');
-  t.end();
-});
-
-test('single string argument is accepted', function(t) {
-  var r = report('doohickey');
-  t.ok(r instanceof ErrorMessage, 'should be an instance of ErrorMessage');
-  t.ok(r.message.match(/doohickey/), 'string error should propagate');
-  t.end();
-});
-
-test('single error argument is accepted', function(t) {
-  var r = report(new Error('hokeypokey'));
-  t.ok(r.message.match(/hokeypokey/));
-  t.end();
-});
-
-test('callback function should get called', function(t) {
-  var r = report('malarkey', function(err, res) {
-    t.end();
-  });
-  t.ok(r.message.match(/malarkey/), 'string error should propagate');
-});
-
-test('calls without any arguments work', function(t) {
-  var r = report();
-  t.ok(r instanceof ErrorMessage, 'should be an instance of ErrorMessage');
-  t.end();
-});
-
-test('just a function is accepted as a malformed error rather than a callback',
-    function(t) {
+describe('Manual handler', function () {
+  // nock.disableNetConnect();
+  // Mocked client
+  var client = {
+      sendError: function(e, cb) {
+      // immediately callback
+      if (cb) {
+        setImmediate(cb);
+      }
+    }
+  };
+  var report = manual(client, config);
+  describe('Report invocation behaviour', function () {
+    it('Should allow argument-less invocation', function () {
+      var r = report();
+      assert(r instanceof ErrorMessage, 'should be an instance of ErrorMessage');
+    });
+    it('Should allow single string', function () {
+      var r = report('doohickey');
+      assert(r instanceof ErrorMessage, 'should be an instance of ErrorMessage');
+      assert(r.message.match(/doohickey/), 'string error should propagate');
+    });
+    it('Should allow single instance of Error', function () {
+      var r = report(new Error('hokeypokey'));
+      assert(r.message.match(/hokeypokey/));
+    });
+    it('Should allow a single function as a malformed error input', function (done) {
+      this.timeout(2000);
       var r = report(function(err, res) {
-        t.fail('callback should not get called');
+        assert(false, 'callback should not be called');
+        done();
       });
-      t.ok(r instanceof ErrorMessage, 'should be an instance of ErrorMessage');
+      assert(r instanceof ErrorMessage, 'should be an instance of ErrorMessage');
       setTimeout(function() {
-        t.end();
+        done();
       }, 1000);
     });
-
-test('optional additional message should replace error string', function(t) {
-  var r = report('monkey', 'wrench', function(err, res) {
-    t.end();
+    it('Should callback to the supplied function', function (done) {
+      var r = report('malarkey', function(err, res) {
+        done();
+      });
+      assert(r.message.match(/malarkey/), 'string error should propagate');
+    });
+    it('Should replace the error string with the additional message', function (done) {
+      var r = report('monkey', 'wrench', function(err, res) {
+        done();
+      });
+      assert.strictEqual(r.message, 'wrench', 'additional message should replace');
+    });
+    it('Should allow a full array of optional arguments', function (done) {
+       var r = report('donkey', { method: 'FETCH' }, 'cart', function(err, res) {
+        done();
+      });
+      assert.strictEqual(r.message, 'cart', 'additional message should replace');
+      assert.strictEqual(r.context.httpRequest.method, 'FETCH');
+    });
+    it('Should allow all optional arguments except the callback', function () {
+      var r = report('whiskey', { method: 'SIP' }, 'sour');
+      assert.strictEqual(r.message, 'sour', 'additional message should replace');
+      assert.strictEqual(r.context.httpRequest.method, 'SIP');
+    });
+    it('Should allow a lack of additional message', function (done) {
+      var r = report('ticky', { method: 'TACKEY' }, function(err, res) {
+        done();
+      });
+      assert(r.message.match(/ticky/) && !r.message.match(/TACKEY/),
+        'original message should be preserved');
+      assert.strictEqual(r.context.httpRequest.method, 'TACKEY');
+    });
+    it('Should ignore arguments after callback value placement', function (done) {
+      var r = report('hockey', function(err, res) {
+        done();
+      }, 'field');
+      assert(r.message.match('hockey') && !r.message.match('field'),
+        'string after callback should be ignored');
+    });
+    it('Should ignore arguments after callback value placement', function (done) {
+      var r = report('passkey', function(err, res) {
+        done();
+      }, { method: 'HONK'});
+      assert.notEqual(r.context.httpRequest.method, 'HONK');
+    });
+    it('Should allow null arguments as placeholders', function (done) {
+      var r = report('pokey', null, null, function(err, res) {
+        done();
+      });
+      assert(r.message.match(/pokey/), 'string error should propagate');
+    });
+    it('Should allow explicit undefined arguments as placeholders', function (done) {
+      var r = report('Turkey', undefined, undefined, function(err, res) {
+        done();
+      });
+      assert(r.message.match(/Turkey/), 'string error should propagate');
+    });
+    it('Should allow request to be supplied as undefined', function (done) {
+      var r = report('turnkey', undefined, 'solution', function(err, res) {
+        done();
+      });
+      assert.strictEqual(r.message, 'solution', 'string error should propagate');
+    });
+    it('Should allow additional message to be supplied as undefined', function (done) {
+      var r = report('Mickey', { method: 'SNIFF'}, undefined, function(err, res) {
+        done();
+      });
+      assert(r.message.match(/Mickey/) && !r.message.match(/SNIFF/),
+        'string error should propagate');
+      assert.strictEqual(r.context.httpRequest.method, 'SNIFF');
+    });
   });
-  t.equal(r.message, 'wrench', 'additional message should replace');
-});
-
-test('all arguments', function(t) {
-  var r = report('donkey', { method: 'FETCH' }, 'cart', function(err, res) {
-    t.end();
-  });
-  t.equal(r.message, 'cart', 'additional message should replace');
-  t.equal(r.context.httpRequest.method, 'FETCH');
-});
-
-test('everything but the callback', function(t) {
-  var r = report('whiskey', { method: 'SIP' }, 'sour');
-  t.equal(r.message, 'sour', 'additional message should replace');
-  t.equal(r.context.httpRequest.method, 'SIP');
-  t.end();
-});
-
-test('missing additional message', function(t) {
-  var r = report('ticky', { method: 'TACKEY' }, function(err, res) {
-    t.end();
-  });
-  t.ok(r.message.match(/ticky/) && !r.message.match(/TACKEY/),
-    'original message should be preserved');
-  t.equal(r.context.httpRequest.method, 'TACKEY');
-});
-
-test('arguments after callback function should get ignored', function(t) {
-  var r = report('hockey', function(err, res) {
-    t.end();
-  }, 'field');
-  t.ok(r.message.match('hockey') && !r.message.match('field'),
-    'string after callback should be ignored');
-});
-
-test('null arguments in the middle', function(t) {
-  var r = report('pokey', null, null, function(err, res) {
-    t.end();
-  });
-  t.ok(r.message.match(/pokey/), 'string error should propagate');
-});
-
-test('undefined arguments in the middle', function(t) {
-  var r = report('Turkey', undefined, undefined, function(err, res) {
-    t.end();
-  });
-  t.ok(r.message.match(/Turkey/), 'string error should propagate');
-});
-
-test('undefined request', function(t) {
-  var r = report('turnkey', undefined, 'solution', function(err, res) {
-    t.end();
-  });
-  t.equal(r.message, 'solution', 'string error should propagate');
-});
-
-test('undefined additional message', function(t) {
-  var r = report('Mickey', { method: 'SNIFF'}, undefined, function(err, res) {
-    t.end();
-  });
-  t.ok(r.message.match(/Mickey/) && !r.message.match(/SNIFF/),
-    'string error should propagate');
-  t.equal(r.context.httpRequest.method, 'SNIFF');
-});
-
-test('arguments after the callback funciton should get ignored', function(t) {
-  var r = report('passkey', function(err, res) {
-    t.end();
-  }, { method: 'HONK'});
-  t.notEqual(r.context.httpRequest.method, 'HONK');
 });

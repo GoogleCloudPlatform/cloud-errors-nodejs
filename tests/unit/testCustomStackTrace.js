@@ -14,67 +14,56 @@
  * limitations under the License.
  */
 
-var test = require('tape');
+var assert = require('assert');
 var CustomStackTrace = require('../../src/classes/custom-stack-trace.js');
-test(
-  'Fuzzing the CustomStackTrace class'
-  , function ( t ) {
 
-    var cs = new CustomStackTrace();
-    var testFunction = function testFunction ( ) {
-
-      return "";
-    }
-
+describe('Fuzzing the CustomStackTrace class', function () {
+  var testFunction = function testFunction () {
+    return "";
+  };
+  var cs;
+  beforeEach(function () { cs = new CustomStackTrace(); });
+  it('Should accept value for file path', function () {
     cs.setFilePath("test");
-    t.assert(
-      cs.filePath === "test"
-      , "Setting a valid string on the CustomStackTrace.filePath instance should result in assignment"
+    assert(
+      cs.filePath === "test",
+      "Setting a valid string on the CustomStackTrace.filePath instance should result in assignment"
     );
-
+  });
+  it('Should reject invalid type for file path', function () {
     cs.setFilePath(null);
-    t.assert(
-      cs.filePath === ""
-      , "Setting an invalid type on the CustomStackTrace.filePath instance should result in default value of an empty string"
+    assert(
+      cs.filePath === "",
+      "Setting an invalid type on the CustomStackTrace.filePath instance should result in default value of an empty string"
     );
-
+  });
+  it('Should accept value for line number', function () {
     cs.setLineNumber(10);
-    t.assert(
-      cs.lineNumber === 10
-      , "Setting a valid number on the CustomStackTrace.lineNumber instance should result in assignment"
+    assert(
+      cs.lineNumber === 10,
+      "Setting a valid number on the CustomStackTrace.lineNumber instance should result in assignment"
     );
-
+  });
+  it('Should reject invalid type for line number', function () {
     cs.setLineNumber("10");
-    t.assert(
-      cs.lineNumber === 0
-      , "Setting an invalid type on the CustomStackTrace.lineNumber instance should result in default value of number 0"
+    assert(
+      cs.lineNumber === 0,
+      "Setting an invalid type on the CustomStackTrace.lineNumber instance should result in default value of number 0"
     );
-
-    cs.setFunctionName("test");
-    t.assert(
-      cs.functionName === "test"
-      , "Setting a valid function name on the CustomStackTrace. functionName instance should result in assignment"
-    );
-
-    cs.setFunctionName(10);
-    t.assert(
-      cs.functionName === ""
-      , "Setting an invalid function name on the CustomStackTrace. functionName instance should result in default value of an empty string"
-    );
-
+  });
+  it('Should accept value for call list', function () {
     cs.setStringifyStructuredCallList(testFunction);
-    t.deepEqual(
-      cs.stringifyStucturedCallList
-      , testFunction
-      , "Setting a valid function on the CustomStackTrace. setStringifyStructuredCallList should result in assignment"
+    assert.strictEqual(
+      cs.stringifyStucturedCallList,
+      testFunction,
+      "Setting a valid function on the CustomStackTrace. setStringifyStructuredCallList should result in assignment"
     );
-
+  });
+  it('Should reject incalid value for call list', function () {
     cs.setStringifyStructuredCallList(null);
-    t.assert(
-      ((typeof cs.setStringifyStructuredCallList) === "function")
-      , "Setting an invalid setStringifyStructuredCallList on the CustomStackTrace. setStringifyStructuredCallList should result in a default value of a function"
+    assert(
+      ((typeof cs.setStringifyStructuredCallList) === "function"),
+      "Setting an invalid setStringifyStructuredCallList on the CustomStackTrace. setStringifyStructuredCallList should result in a default value of a function"
     );
-
-    t.end();
-  }
-);
+  })
+});

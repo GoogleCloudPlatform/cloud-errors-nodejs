@@ -18,7 +18,7 @@ var lodash = require('lodash');
 var isFunction = lodash.isFunction;
 var isPlainObject = lodash.isPlainObject;
 var has = lodash.has;
-var test = require('tape');
+var assert = require('assert');
 var hapiInterface = require('../../src/interfaces/hapi.js');
 var ErrorMessage = require('../../src/classes/error-message.js');
 var Fuzzer = require('../../utils/fuzzer.js');
@@ -26,162 +26,120 @@ var EventEmitter = require('events').EventEmitter;
 var Configuration = require('../fixtures/configuration.js');
 var createLogger = require('../../src/logger.js');
 
-test(
-  "Given invalid, variable input the hapi interface handler setup should not throw errors"
-  , function ( t ) {
-
-    var f = new Fuzzer();
-
-    t.doesNotThrow(
-      function ( ) {
-
-        f.fuzzFunctionForTypes(
-          hapiInterface
-          , ["object", "object"]
-        );
-
-        return ;
-      }
-      , undefined
-      , "The express interface handler setup should not throw when given invalid types"
-    );
-
-    t.end();
-  }
-);
-
-test(
-  [
-    "Given valid input, the handler setup function should return a object with"
-    , "one property"
-  ].join(" ")
-  , function ( t ) {
-
+describe('Hapi interface', function () {
+  describe('Fuzzing the setup handler', function () {
+    it('Should not throw when fuzzed with invalid types', function () {
+      var f = new Fuzzer();
+      assert.doesNotThrow(function () {
+        f.fuzzFunctionForTypes(hapiInterface, ['object', 'object']);
+        return;
+      });
+    });
+  });
+  describe('Providing valid input to the setup handler', function () {
     var givenConfig = {getVersion: function () {return '1';}};
-    var plugin = hapiInterface(null, givenConfig);
-
-    t.assert(
-      isPlainObject(plugin)
-      , "The plugin should be a lodash `plain object`"
+    var plugin;
+    beforeEach(function () {plugin = hapiInterface(null, givenConfig)});
+    it('should have plain object as plugin', function () {
+      assert(isPlainObject(plugin));
+    });
+    it('plugin should have a register function property', function () {
+      assert(has(plugin, 'register') && isFunction(plugin.register));
+    });
+    it('the plugin\'s register property should have an attributes property',
+      function () {
+        assert(has(plugin.register, 'attributes') &&
+          isPlainObject(plugin.register.attributes));
+      }
     );
-
-    t.assert(
-      has(plugin, "register")
-      , "The plugin object should have a register property"
+    it('the plugin\'s attribute property should have a name property',
+      function () {
+        assert(has(plugin.register.attributes, 'name'));
+        assert.strictEqual(plugin.register.attributes.name,
+          '@google/cloud-errors');
+      }
     );
-
-    t.assert(
-      isFunction(plugin.register)
-      , "The register property should be of type function"
+    it('the plugin\'s attribute property should have a version property',
+      function () {
+        assert(has(plugin.register.attributes, 'version'));
+      }
     );
-
-    t.assert(
-      has(plugin.register, "attributes")
-      , "The register function property should have a property called attributes"
-    );
-
-    t.assert(
-      isPlainObject(plugin.register.attributes)
-      , "The attributes property should be a lodash `plain object`"
-    );
-
-    t.assert(
-      has(plugin.register.attributes, "name")
-      , "The attributes object property should have a name property"
-    );
-
-    t.assert(
-      plugin.register.attributes.name === "@google/cloud-errors"
-      , "The name property should be of type string and the same value as `@google/cloud-errors`"
-    );
-
-    t.assert(
-      has(plugin.register.attributes, "version")
-      , "The attributes object property should have a version property"
-    );
-
-    t.end();
-  }
-);
-
-test(
-  [
-    "Given a fake server the hapiRegisterFunction should call the clientSend"
-    , "error function and create an errorMessage"
-  ].join(" ")
-  , function ( t ) {
-
-      var fakeServer = new EventEmitter();
+  });
+  describe('hapiRegisterFunction behaviour', function () {
+    var fakeServer;
+    beforeEach(function () {fakeServer = new EventEmitter();});
+    it('Should call sendError when the request-error event is emitted', function () {
       var fakeClient = {
         sendError: function ( errMsg ) {
-
-          t.assert(
-            errMsg instanceof ErrorMessage
-            , "The value given to sendError should be an instance of Error message"
-          );
-          t.pass("The sendError function should be called on emission of request-error");
+          assert(errMsg instanceof ErrorMessage,
+            'The value given to sendError should be an instance of Error message');
         }
       };
-
-      var plugin = hapiInterface(fakeClient, new Configuration({serviceContext: { service: "1", version: "2" }},
-        createLogger({logLevel: 4})));
-
-      plugin.register(fakeServer, null, null, null);
-
-      fakeServer.emit('request-error');
-
-      fakseServer = new EventEmitter();
-      fakeServer.ext = fakeServer.on;
-      fakeClient.sendError = function ( errMsg ) {
-
-        t.assert(
-          errMsg instanceof ErrorMessage
-          , "The value given to sendError should be an instance of Error message"
-        );
-        t.assert(
-          errMsg.serviceContext.service === testConfig._serviceContext.service
-          , "The errMsg service value and the test config service value should match"
-        );
-        t.assert(
-          errMsg.serviceContext.version === testConfig._serviceContext.version
-          , "The errMsg version value and the test config service value should match"
-        );
-        t.pass("The sendError function should be emitted when the onPreResponse event is emitted");
-      };
-
-      var testConfig = new Configuration({serviceContext: { service: "1", version: "2"  }},
-        createLogger({logLevel: 4}));
-      plugin = hapiInterface(fakeClient, testConfig);
-
-      plugin.register(fakeServer, null, function ( errMsg ) {
-
-        t.pass("Next should be called");
+      var plugin = hapiInterface(fakeClient, {
+        lacksCredentials: function () {
+          return false;
+        },
+        getVersion: function () {
+          return '1';
+        },
+        getServiceContext: function () {
+          return {service: 'node'}
+        }
       });
-
-      fakeServer.emit('onPreResponse', {response: { isBoom: true }},
+      plugin.register(fakeServer, null, null, null);
+      fakeServer.emit('request-error');
+    });
+  });
+  describe('Behaviour around the request/response lifecycle', function () {
+    var EVENT = 'onPreResponse';
+    var fakeServer, config, plugin, fakeClient = {sendError: function () {}};
+    before(function () {
+      config = new Configuration({
+        projectId: 'xyz',
+        serviceContext: {
+          service: 'x',
+          version: '1.x'
+        }
+      });
+      config.lacksCredentials = function () {return false;};
+      plugin = hapiInterface(fakeClient, config);
+    });
+    beforeEach(function () {
+      fakeServer = new EventEmitter();
+      fakeServer.ext = fakeServer.on;
+    });
+    afterEach(function () {
+      fakeServer.removeAllListeners();
+    });
+    it('Should call continue when a boom preResponse is emitted', function (done) {
+      plugin.register(fakeServer, null, function () {});
+      fakeServer.emit(EVENT, {response: {isBoom: true}},
         {
           continue: function () {
-
-            t.pass("The continue function should be called");
+            // The continue function should be called
+            done();
           }
         }
       );
-
-      fakeServer.emit("onPreResponse");
-      t.pass("The onPreResponse function should not throw given invalid input");
-
-      t.doesNotThrow(
-        plugin.register
-        , undefined
-        , "The register function should not throw if given invalid arguments"
-      );
-
-      t.doesNotThrow(
-        plugin.register.bind(null, {})
-        , undefined
-        , "The register function should not throw if given an invalid server object"
-      );
-
-      t.end();
-  }
-);
+    });
+    it('Should call sendError when a boom response is received', function (done) {
+      var fakeClient = {
+        sendError: function (err) {
+          assert(err instanceof ErrorMessage);
+          done();
+        }
+      };
+      var plugin = hapiInterface(fakeClient, config);
+      plugin.register(fakeServer, null, function () {});
+      fakeServer.emit('onPreResponse', {response:{isBoom: true}});
+    });
+    it('Should call next when completing a request', function (done) {
+      plugin.register(fakeServer, null, function (err) {
+        // The next function should be called
+        done();
+      });
+      fakeServer.emit(EVENT, {response: {isBoom: true}},
+        {continue: function () {}});
+    });
+  });
+});

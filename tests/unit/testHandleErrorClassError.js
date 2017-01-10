@@ -14,73 +14,41 @@
  * limitations under the License.
  */
 
-var test = require('tape');
+var assert = require('assert');
 var ErrorMessage = require('../../src/classes/error-message.js');
 var handleErrorClassError = require('../../src/error-handlers/error.js');
-var errorClassParsingUtils = require('../../src/error-parsing-utils.js');
 
-
-test(
-  'Given variable inputs and input-types in the handleErrorClassError handler'
-  , function ( t ) {
-
-    var adversarialObjectInput = {
-      stack: {}
-    };
-    var adversarialObjectInputTwo = {
-      stack: []
-    };
-
-    var em = new ErrorMessage();
-
-    t.plan(8);
-
-    t.doesNotThrow(
-      handleErrorClassError.bind(null, undefined, em)
-      , undefined
-      , "Should not throw when given undefined"
-    );
-
-    t.doesNotThrow(
-      handleErrorClassError.bind(null, null, em)
-      , undefined
-      , "Should not throw when given null"
-    );
-
-    t.doesNotThrow(
-      handleErrorClassError.bind(null, "string_test", em)
-      , undefined
-      , "Should not throw when given a string"
-    );
-
-    t.doesNotThrow(
-      handleErrorClassError.bind(null, 1.2, em)
-      , undefined
-      , "Should not throw when given a number"
-    );
-
-    t.doesNotThrow(
-      handleErrorClassError.bind(null, [], em)
-      , undefined
-      , "Should not throw when given an array"
-    );
-
-    t.doesNotThrow(
-      handleErrorClassError.bind(null, adversarialObjectInput, em)
-      , undefined
-      , "Should not throw when given a masquerading object"
-    );
-
-    t.doesNotThrow(
-      handleErrorClassError.bind(null, adversarialObjectInputTwo, em)
-      , undefined
-      , "Should not throw when given a masquerading array"
-    );
-
-    t.doesNotThrow(
-      handleErrorClassError.bind(null, new Error("Test"), em)
-      , undefined
-      , "Should not throw when given a valid input"
-    );
-  }
-);
+describe('Behaviour under various type inputs', function () {
+  var em;
+  var adversarialObjectInput = {
+    stack: {}
+  };
+  var adversarialObjectInputTwo = {
+    stack: []
+  };
+  beforeEach(function () {em = new ErrorMessage()});
+  it('Should not throw given undefined', function () {
+    assert.doesNotThrow(handleErrorClassError.bind(null, undefined, em));
+  });
+  it('Should not throw given null', function () {
+    assert.doesNotThrow(handleErrorClassError.bind(null, null, em));
+  });
+  it('Should not throw given a string', function () {
+    assert.doesNotThrow(handleErrorClassError.bind(null, 'string_test', em));
+  });
+  it('Should not throw given a number', function () {
+    assert.doesNotThrow(handleErrorClassError.bind(null, 1.2, em));
+  });
+  it('Should not throw given an array', function () {
+    assert.doesNotThrow(handleErrorClassError.bind(null, [], em));
+  });
+  it('Should not throw given an object of invalid form', function () {
+    assert.doesNotThrow(
+      handleErrorClassError.bind(null, adversarialObjectInput, em));
+    assert.doesNotThrow(
+      handleErrorClassError.bind(null, adversarialObjectInputTwo, em));
+  });
+  it('Should not throw given valid input', function () {
+    assert.doesNotThrow(handleErrorClassError.bind(null, new Error(), em));
+  });
+});

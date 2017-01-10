@@ -351,10 +351,6 @@ Configuration.prototype._checkLocalProjectId = function(cb) {
   if (isString(this._projectId)) {
     // already has been set by the metadata service
     cb(null, this._projectId);
-  } else if (isString(env.GCLOUD_PROJECT) && !isEmpty(env.GCLOUD_PROJECT)) {
-    // GCLOUD_PROJECT is set, set on instance
-    this._projectId = env.GCLOUD_PROJECT;
-    cb(null, this._projectId);
   } else if (has(this._givenConfiguration, 'projectId')) {
     if (isString(this._givenConfiguration.projectId)) {
       this._projectId = this._givenConfiguration.projectId;
@@ -365,6 +361,10 @@ Configuration.prototype._checkLocalProjectId = function(cb) {
     } else {
       cb(new Error('config.projectId must be a string or number'), null);
     }
+  } else if (isString(env.GCLOUD_PROJECT) && !isEmpty(env.GCLOUD_PROJECT)) {
+    // GCLOUD_PROJECT is set, set on instance
+    this._projectId = env.GCLOUD_PROJECT;
+    cb(null, this._projectId);
   } else {
     cb(new Error([
       'Unable to find the project Id for communication with the Stackdriver',

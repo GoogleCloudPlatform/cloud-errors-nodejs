@@ -15,7 +15,7 @@
  */
 
 'use strict';
-var test = require('tape');
+var assert = require('assert');
 var nock = require('nock');
 var RequestHandler = require('../../src/google-apis/auth-client.js');
 var ErrorMessage = require('../../src/classes/error-message.js');
@@ -25,324 +25,326 @@ var lodash = require('lodash');
 var isObject = lodash.isObject;
 var isString = lodash.isString;
 var isEmpty = lodash.isEmpty;
+var forEach = lodash.forEach;
+var assign = lodash.assign;
 var client;
 
 
-test(
-  'Test given valid init parameters we should be able to create a client',
-  function ( t ) {
-    var cfg  = new Configuration({ignoreEnvironmentCheck: true}, 
-      createLogger({logLevel: 5}));
+describe('Behvaiour acceptance testing', function () {
+  before(function () {
+    // Before starting the suite make sure we have the proper resources
     if (!isString(process.env.GCLOUD_PROJECT)) {
-      t.fail("The gcloud project id (GCLOUD_PROJECT) was not set as an env variable");
-      t.end();
-      process.exit();
+      console.error(
+        'The gcloud project id (GCLOUD_PROJECT) was not set as an env variable');
+      this.skip();
     } else if (!isString(process.env.STUBBED_API_KEY)) {
-      t.fail("The api key (STUBBED_API_KEY) was not set as an env variable");
-      t.end();
-      process.exit();
+      console.error(
+        'The api key (STUBBED_API_KEY) was not set as an env variable');
+      this.skip();
     } else if (!isString(process.env.STUBBED_PROJECT_NUM)) {
-      t.fail('The project number (STUBBED_PROJECT_NUM) was not set as an env variable');
+      console.error(
+        'The project number (STUBBED_PROJECT_NUM) was not set as an env variable');
+      this.skip();
+    } else if (process.env.NODE_ENV !== 'production') {
+      console.error(
+        'The NODE_ENV is not set to production as an env variable. Please set '+
+        'NODE_ENV to production');
+      this.skip();
     }
-
-    try {
-      client = new RequestHandler(cfg, createLogger({logLevel: 5}));
-    } catch (e) {
-
-      t.fail("Could not init client:\n"+e);
-      t.end();
-      process.exit();
-    }
-   t.pass("Able to create client without throwing")
-   t.end();
-  }
-);
-
-test(
-  'Given invalid json the api should respond with an error message ' +
-  'and the callback function should be called',
-  function (t) {
-    client.sendError({}, function (error, response, body) {
-      t.equal(
-        body,
-        null,
-        "the body should be of type null"
-      );
-      t.assert(
-        error instanceof Error,
-        "The error should be an instance of Error"
-      );
-      t.equal(
-        "message cannot be empty.",
-        error.message.toLowerCase(),
-        "The error message should be in the message property"
-      );
-      t.assert(
-        isObject(response),
-        "The response should be of type object"
-      );
-      t.equal(
-        response.statusCode,
-        400,
-        "The error code should be 400"
-      );
-      t.end();
-    });
-  }
-);
-
-test('Given invalid input but a repeatable error response the client should retry',
-  function ( t ) {
-    var tries = 0;
-    var intendedTries = 5;
-    var er = new Error("_@google_STACKDRIVER_INTEGRATION_TEST_ERROR__");
-    var em = new ErrorMessage()
-      .setMessage(er.stack);
-    var s = nock(
-      'https://clouderrorreporting.googleapis.com/v1beta1/projects/'+
+    // In case we are running after unit mocks which were not destroyed properly
+    nock.cleanAll();
+  });
+  describe('Request/Response lifecycle mocking', function () {
+    var sampleError = new Error("_@google_STACKDRIVER_INTEGRATION_TEST_ERROR__");
+    var errorMessage = new ErrorMessage().setMessage(sampleError);
+    var fakeService, client, logger;
+    beforeEach(function () {
+      fakeService = nock(
+        'https://clouderrorreporting.googleapis.com/v1beta1/projects/'+
         process.env.GCLOUD_PROJECT
-    ).persist().post('/events:report').reply(429, function () {
-      tries += 1;
-      t.comment('Mock Server Received Request: '+tries+'/'+intendedTries);
-      return {error: 'Please try again later'};
+      ).persist().post('/events:report');
+      logger = createLogger({logLevel: 5});
+      client = new RequestHandler(
+        new Configuration({ignoreEnvironmentCheck: true}, logger), logger);
     });
-    client.sendError(em, function (error, response, body) {
-      t.equal(
-        tries,
-        intendedTries,
-        ["The client should retry", intendedTries, "times"].join(" ")
-      );
+    afterEach(function () {
       nock.cleanAll();
-      t.end();
     });
-  }
-);
-
-test('Not giving a callback function should still allow the actual request to execute',
-  function ( t ) {
-    var tries = 0;
-    var intendedTries = 5;
-    var er = new Error("_@google_STACKDRIVER_INTEGRATION_TEST_ERROR__");
-    var em = new ErrorMessage()
-      .setMessage(er.stack);
-    var s = nock(
-      'https://clouderrorreporting.googleapis.com/v1beta1/projects/'+
-        process.env.GCLOUD_PROJECT
-    ).persist().post('/events:report').reply(200, function () {
-      tries += 1;
-      t.pass('Mock Server Received Request');
-      nock.cleanAll();
-      t.end();
-      return {};
+    describe('Receiving non-retryable errors', function () {
+      it('Should fail', function (done) {
+        this.timeout(5000);
+        client.sendError({}, function (err, response, body) {
+          assert(err instanceof Error);
+          assert.strictEqual(err.message.toLowerCase(),
+            'message cannot be empty.');          
+          assert.strictEqual(body, null);
+          assert(isObject(response));
+          assert.strictEqual(response.statusCode, 400);
+          done();
+        });
+      });
     });
-    client.sendError(em);
-  }
-);
-
-test(
-  'Given valid json the api should response with a success message ' +
-  'and the callback function should be called',
-  function (t) {
-    var er = new Error("_@google_STACKDRIVER_INTEGRATION_TEST_ERROR__");
-    var em = new ErrorMessage()
-      .setMessage(er.stack);
-    client.sendError(em, function (error, response, body) {
-      t.equal(
-        error,
-        null,
-        "The error should be null"
-      );
-      t.assert(
-        isObject(body),
-        "the body should be of type object"
-      );
-      t.assert(
-        isEmpty(body),
-        "the body should be an empty object"
-      );
-      t.equal(
-        response.statusCode,
-        200,
-        'The status code should be 200'
-      );
-      t.end();
+    describe('Receiving retryable errors', function () {
+      it('Should retry', function (done) {
+        this.timeout(25000);
+        var tries = 0;
+        var intendedTries = 5;
+        fakeService.reply(429, function () {
+          tries += 1;
+          console.log('Mock Server Received Request:', tries+'/'+intendedTries);
+          return {error: 'Please try again later'};
+        });
+        client.sendError(errorMessage, function (err, response, body) {
+          assert.strictEqual(tries, intendedTries);
+          done();
+        });
+      });
     });
-  }
-);
-
-test(
-  'Given a key the client should include it as a url param on all requests',
-  function (t) {
-    var key = process.env.STUBBED_API_KEY
-    client = new RequestHandler(new Configuration(
-      {key: key, ignoreEnvironmentCheck: true},
-      createLogger({logLevel: 5})
-    ));
-    var er = new Error("_@google_STACKDRIVER_INTEGRATION_TEST_ERROR__");
-    var em = new ErrorMessage()
-      .setMessage(er.stack);
-    var s = nock(
-      'https://clouderrorreporting.googleapis.com/v1beta1/projects/' +
-       process.env.GCLOUD_PROJECT
-    ).persist().post('/events:report?key='+key).reply(200, function (uri) {
-      t.deepEqual(
-        uri.split("key=")[1],
-        key,
-        "The uri should have the key embedded into it"
-      );
-
-      return {done: true};
+    describe('Using an API key', function () {
+      it('Should provide the key as a query string on outgoing requests', function (done) {
+        var key = process.env.STUBBED_API_KEY;
+        var client = new RequestHandler(new Configuration(
+          {key: key, ignoreEnvironmentCheck: true},
+          createLogger({logLevel: 5})));
+        fakeService.query({key: key}).reply(200, function (uri) {
+          assert(uri.indexOf('key='+key) > -1);
+          return {};
+        });
+        client.sendError(errorMessage, function () {
+          done();
+        });
+      });
     });
-   client.sendError(em, function(error, body, response) {
-      nock.cleanAll();
-      t.end();
+    describe('Callback-less invocation', function () {
+      it('Should still execute the request', function (done) {
+        fakeService.reply(200, function () {
+          done();
+        });
+        client.sendError(errorMessage);
+      });
     });
-  }
-);
-
-test(
-  'Given valid json and API key the api should response with a success message'+
-  ' and the callback function should be called',
-  function (t) {
-    var er = new Error("_@google_STACKDRIVER_INTEGRATION_TEST_API_KEY_ERROR__");
-    var em = new ErrorMessage().setMessage(er.stack);
-    client.sendError(em, function (error, response, body) {
-      t.equal(
-        error,
-        null,
-        "The error should be null"
-      );
-      t.assert(
-        isObject(body),
-        "the body should be of type object"
-      );
-      t.assert(
-        isEmpty(body),
-        "the body should be an empty object"
-      );
-      t.equal(
-        response.statusCode,
-        200,
-        'The status code should be 200'
-      );
-      t.end();
-    });
-  }
-);
-
-test(
-  'Given a configuration to not report errors the client should callback with an error',
-  function (t) {
-    var old = process.env.NODE_ENV;
-    delete process.env.NODE_ENV;
-    var l = createLogger({logLevel: 5});
-    client = new RequestHandler(new Configuration(undefined, l), createLogger({logLevel: 5}));
-    client.sendError({}, function (err, response, body){
-      t.assert(
-        err instanceof Error,
-        "The error should be an instance of the Error class"
-      );
-      t.assert(
-        isString(err.message),
-        "The error message property should be of type string"
-      );
-      t.deepEqual(
-        body,
-        null,
-        "the body should be null"
-      );
-      t.deepEqual(
-        response,
-        null,
-        "The response should be null"
-      );
-      process.env.NODE_ENV = old;
-      t.end();
-    });
-  }
-);
-
-test(
-  'Given an invalid env configuration the client should move into the cannot init state',
-  function (t) {
-    var old = process.env.GCLOUD_PROJECT;
-    delete process.env.GCLOUD_PROJECT;
-    var er = new Error("_@google_STACKDRIVER_INTEGRATION_TEST_API_KEY_ERROR__");
-    var em = new ErrorMessage()
-      .setMessage(er.stack);
-    var cfg = new Configuration(undefined, createLogger({logLevel: 5}));
-    client = new RequestHandler(cfg, createLogger({logLevel: 5}));
-    client.sendError(em, function (err, response, body) {
-      t.assert(
-        err instanceof Error,
-        "The error should be an instance of the Error class"
-      );
-      t.deepEqual(
-        response,
-        null,
-        "The response should be of type null"
-      );
-      t.deepEqual(
-        body,
-        null,
-        "The response body should be of type null"
-      );
-      t.end();
-    });
-  }
-);
-
-test(
-  'Test given valid init parameters we should be able to create a client using' +
-  ' project number',
-  function ( t ) {
-    var client;
-    var oldProject = process.env.GCLOUD_PROJECT;
-    var oldKey = process.env.STUBBED_API_KEY;
-    delete process.env.GCLOUD_PROJECT;
-    delete process.env.STUBBED_API_KEY;
-     var cfg  = new Configuration(
-      {
-        projectId: process.env.STUBBED_PROJECT_NUM,
-        ignoreEnvironmentCheck: true
-      },
-      createLogger({logLevel: 5})
-    );
-
-    try {
-      client = new RequestHandler(cfg, createLogger({logLevel: 5}));
-    } catch (e) {
-
-      t.fail("Could not init client:\n"+e);
-      t.end();
-      process.exit();
+  });
+  describe('System-live integration testing', function () {
+    var sampleError = new Error("_@google_STACKDRIVER_INTEGRATION_TEST_ERROR__");
+    var errorMessage = new ErrorMessage().setMessage(sampleError.stack);
+    var oldEnv = {
+      GCLOUD_PROJECT: process.env.GCLOUD_PROJECT,
+      STUBBED_PROJECT_NUM: process.env.STUBBED_PROJECT_NUM,
+      NODE_ENV: process.env.NODE_ENV
+    };
+    function sterilizeEnv () {
+      forEach(oldEnv, function (val, key) {
+        delete process.env[key];
+      });
     }
-   t.pass("Able to create client without throwing");
-    var er = new Error("_@google_STACKDRIVER_INTEGRATION_TEST_ERROR__");
-    var em = new ErrorMessage()
-      .setMessage(er.stack);
-    client.sendError(em, function (error, response, body) {
-      t.equal(
-        error,
-        null,
-        "The error should be null"
-      );
-      t.assert(
-        isObject(body),
-        "the body should be of type object"
-      );
-      t.assert(
-        isEmpty(body),
-        "the body should be an empty object"
-      );
-      t.equal(
-        response.statusCode,
-        200,
-        'The status code should be 200'
-      );
-      process.env.GCLOUD_PROJECT = oldProject;
-      process.env.STUBBED_API_KEY = oldKey;
-      t.end();
+    function restoreEnv () {
+      assign(process.env, oldEnv);
+    }
+    describe('Client creation', function () {
+      describe('Using only project id', function () {
+        describe('As a runtime argument', function () {
+          var cfg, logger;
+          before(function () {
+            sterilizeEnv();
+            logger = createLogger({logLevel: 5});
+            cfg = new Configuration({projectId: oldEnv.GCLOUD_PROJECT,
+              ignoreEnvironmentCheck: true}, logger);
+          });
+          after(restoreEnv);
+          it('Should not throw on initialization', function (done) {
+            this.timeout(10000);
+            assert.doesNotThrow(function () {
+              (new RequestHandler(cfg, logger)).sendError(errorMessage,
+                function (err, response, body) {
+                  assert.strictEqual(err, null);
+                  assert.strictEqual(response.statusCode, 200);
+                  assert(isObject(body) && isEmpty(body));
+                  done();
+                }
+              );
+            });
+          });
+        });
+        describe('As an env variable', function () {
+          var cfg, logger;
+          before(function () {
+            sterilizeEnv();
+            process.env.GCLOUD_PROJECT = oldEnv.GCLOUD_PROJECT;
+            logger = createLogger({logLevel: 5});
+            cfg = new Configuration({ignoreEnvironmentCheck: true}, logger);
+          });
+          after(restoreEnv);
+          it('Should not throw on initialization', function (done) {
+            this.timeout(10000);
+            assert.doesNotThrow(function () {
+              (new RequestHandler(cfg, logger)).sendError(errorMessage,
+                function (err, response, body) {
+                  assert.strictEqual(err, null);
+                  assert.strictEqual(response.statusCode, 200);
+                  assert(isObject(body) && isEmpty(body));
+                  done();
+                }
+              );
+            });
+          });
+        });
+      });
+      describe('Using only project number', function () {
+        describe('As a runtime argument', function () {
+          var cfg, logger;
+          before(function () {
+            sterilizeEnv();
+            logger = createLogger({logLevel: 5});
+            cfg = new Configuration({projectId: parseInt(oldEnv.STUBBED_PROJECT_NUM),
+              ignoreEnvironmentCheck: true}, logger);
+          });
+          after(restoreEnv);
+          it('Should not throw on initialization', function (done) {
+            this.timeout(10000);
+            assert.doesNotThrow(function () {
+              (new RequestHandler(cfg, logger)).sendError(errorMessage,
+                function (err, response, body) {
+                  assert.strictEqual(err, null);
+                  assert.strictEqual(response.statusCode, 200);
+                  assert(isObject(body) && isEmpty(body));
+                  done();
+                }
+              );
+            });
+          });
+        });
+        describe('As an env variable', function () {
+          var cfg, logger;
+          before(function () {
+            sterilizeEnv();
+            process.env.GCLOUD_PROJECT = oldEnv.STUBBED_PROJECT_NUM;
+            logger = createLogger({logLevel: 5});
+            cfg = new Configuration({ignoreEnvironmentCheck: true}, logger);
+          });
+          after(restoreEnv);
+          it('Should not throw on initialization', function (done) {
+            this.timeout(10000);
+            assert.doesNotThrow(function () {
+              (new RequestHandler(cfg, logger)).sendError(errorMessage,
+                function (err, response, body) {
+                  assert.strictEqual(err, null);
+                  assert.strictEqual(response.statusCode, 200);
+                  assert(isObject(body) && isEmpty(body));
+                  done();
+                }
+              );
+            });
+          });
+        });
+      });
     });
-  }
-);
+    describe('Error behvaiour', function () {
+      describe('With a configuration to not report errors', function () {
+        var ERROR_STRING = [
+          'Stackdriver error reporting client has not been configured to send',
+          'errors, please check the NODE_ENV environment variable and make sure',
+          'it is set to "production" or set the ignoreEnvironmentCheck property',
+          'to  true in the runtime configuration object'
+        ].join(' ');
+        var logger, client;
+        before(function () {
+          delete process.env.NODE_ENV;
+          logger = createLogger({logLevel: 5});
+          client = new RequestHandler(new Configuration(undefined, logger),
+            logger);
+        });
+        after(function () {
+          process.env.NODE_ENV = oldEnv.NODE_ENV;
+        });
+        it('Should callback with an error', function (done) {
+          client.sendError({}, function (err, response, body) {
+            assert(err instanceof Error);
+            assert.strictEqual(err.message, ERROR_STRING);
+            assert.strictEqual(body, null);
+            assert.strictEqual(response, null);
+            done();
+          });
+        });
+      });
+      describe('An invalid env configuration', function () {
+        var ERROR_STRING = [
+          'Unable to find the project Id for communication with the Stackdriver',
+          'Error Reporting service. This app will be unable to send errors to',
+          'the reporting service unless a valid project Id is supplied via',
+          'runtime configuration or the GCLOUD_PROJECT environmental variable.'
+        ].join(' ');
+        var logger, client;
+        before(function () {
+          delete process.env.GCLOUD_PROJECT;
+          logger = createLogger({logLevel: 5});
+          client = new RequestHandler(new Configuration(undefined, logger),
+            logger);
+        });
+        after(function () {
+          process.env.GCLOUD_PROJECT = oldEnv.GCLOUD_PROJECT;
+        });
+        it('Should callback with an error', function (done) {
+          client.sendError(errorMessage, function (err, response, body) {
+            assert(err instanceof Error);
+            assert.strictEqual(err.message, ERROR_STRING);
+            assert.strictEqual(response, null);
+            assert.strictEqual(body, null);
+            done();
+          });
+        });
+      });
+    });
+    describe('Success behaviour', function () {
+      var er = new Error("_@google_STACKDRIVER_INTEGRATION_TEST_ERROR__");
+      var em = new ErrorMessage().setMessage(er.stack);
+      describe('Given a valid project id', function () {
+        var logger, client, cfg;
+        before(function () {
+          sterilizeEnv();
+          logger = createLogger({logLevel: 5});
+          cfg = new Configuration({
+            projectId: oldEnv.GCLOUD_PROJECT,
+            ignoreEnvironmentCheck: true
+          }, logger);
+          client = new RequestHandler(cfg, logger);
+        });
+        after(restoreEnv);
+        it('Should succeed in its request', function (done) {
+          client.sendError(em, function (err, response, body) {
+            assert.strictEqual(err, null);
+            assert(isObject(body));
+            assert(isEmpty(body));
+            assert.strictEqual(response.statusCode, 200);
+            done();
+          });
+        });
+      });
+      describe('Given a valid project number', function () {
+        var logger, client, cfg;
+        before(function () {
+          forEach(oldEnv, function (val, key) {
+            delete process.env[key];
+          });
+          logger = createLogger({logLevel: 5});
+          cfg = new Configuration({
+            projectId: parseInt(oldEnv.STUBBED_PROJECT_NUM),
+            ignoreEnvironmentCheck: true
+          }, logger);
+          client = new RequestHandler(cfg, logger);
+        });
+        after(function () {
+          assign(process.env, oldEnv);
+        });
+        it('Should succeed in its request', function (done) {
+          client.sendError(em, function (err, response, body) {
+            assert.strictEqual(err, null);
+            assert(isObject(body));
+            assert(isEmpty(body));
+            assert.strictEqual(response.statusCode, 200);
+            done();
+          });
+        });
+      });
+    });
+  });
+});

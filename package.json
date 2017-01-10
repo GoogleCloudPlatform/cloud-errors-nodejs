@@ -5,9 +5,9 @@
   "main": "index.js",
   "repository": "GoogleCloudPlatform/cloud-errors-nodejs",
   "scripts": {
-    "test": "./node_modules/istanbul/lib/cli.js cover -x \"fuzzer.js\" ./node_modules/tape/bin/tape ./tests/unit/*.js",
-    "integration-tests": "./node_modules/istanbul/lib/cli.js cover -x \"error-message.js\" ./node_modules/tape/bin/tape ./tests/integration/*.js",
-    "style": "./node_modules/jshint/bin/jshint src index.js",
+    "test": "$(npm bin)/nyc --exclude=\"fuzzer.js\" ./node_modules/mocha/bin/mocha ./tests/unit/*.js",
+    "integration-tests": "$(npm bin)/nyc -exclude=[\"error-message.js\"] ./node_modules/mocha/bin/mocha ./tests/integration/*.js",
+    "style": "./node_modules/jshint/bin/jshint lib index.js",
     "coverage": "./bin/test.sh -l",
     "coveralls": "./bin/test.sh",
     "docs": "./node_modules/.bin/jsdoc -d docs index.js src/"
@@ -23,12 +23,19 @@
     "jsdoc": "git+https://github.com/jsdoc3/jsdoc.git",
     "jshint": "^2.9.2",
     "koa": "^1.2.0",
+    "mocha": "^3.2.0",
     "nock": "^9.0.0",
+    "nyc": "^10.0.0",
     "restify": "^4.1.0",
     "tape": "^4.5.1"
   },
   "dependencies": {
     "@google/cloud-diagnostics-common": "0.3.0",
     "lodash": "^4.13.1"
+  },
+  "nyc": {
+    "exclude": [
+      "utils/fuzzer.js"
+    ]
   }
 }

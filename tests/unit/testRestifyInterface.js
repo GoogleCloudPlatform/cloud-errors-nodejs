@@ -15,11 +15,8 @@
  */
 
 var EventEmitter = require('events').EventEmitter;
-var test = require('tape');
+var assert = require('assert');
 var restifyInterface = require('../../src/interfaces/restify.js');
-var UNCAUGHT_EVENT = 'uncaughtException';
-var Configuration = require('../fixtures/configuration.js');
-var createLogger = require('../../src/logger.js');
 
 // node v0.12 compatibility
 if (!EventEmitter.prototype.listenerCount) {
@@ -28,94 +25,110 @@ if (!EventEmitter.prototype.listenerCount) {
   }
 }
 
-test('Attachment of the server object to uncaughtException', function (t) {
-  var ee = new EventEmitter;
-  t.plan(2);
-  t.deepEqual(ee.listenerCount(UNCAUGHT_EVENT), 0,
-    'Listeners on event should be zero');
-  // return the bound function which the user will actually interface with
-  var stubbedConfig = new Configuration({
-      serviceContext: {
-        service: "a_test_service"
-        , version: "a_version"
-      }
-    }, createLogger({logLevel: 4}));
-  var errorHandlerInstance = restifyInterface(null, stubbedConfig);
-  // execute the handler the user will use with the stubbed server instance
-  errorHandlerInstance(ee);
-  t.deepEqual(ee.listenerCount(UNCAUGHT_EVENT), 1,
-    'Listeners on event should now be one');
-});
-
-test('Restify request handler lifecycle events', function (t) {
+describe('restifyInterface', function () {
+  var UNCAUGHT_EVENT = 'uncaughtException';
+  var FINISH = 'finish';
   var noOp = function () {return;};
-  var ee = new EventEmitter;
-  var stubbedConfig = new Configuration({
-      serviceContext: {
-        service: "a_test_service"
-        , version: "a_version"
-      }
-    }, createLogger({logLevel: 4}));
-  var errorHandlerInstance = restifyInterface(null, stubbedConfig);
-  var requestHandlerInstance = errorHandlerInstance(ee);
-  // excerise the default path on invalid input to the request handler
-  t.doesNotThrow(function () {
-    requestHandlerInstance(null, null, noOp);
+  describe('Attachment to the uncaughtException event', function () {
+    it('Should attach one listener after instantiation', function () {
+      var ee = new EventEmitter;
+      assert.strictEqual(ee.listenerCount(UNCAUGHT_EVENT), 0,
+        'Listeners on event should be zero');
+      // return the bound function which the user will actually interface with
+      var errorHandlerInstance = restifyInterface(null, null);
+      // execute the handler the user will use with the stubbed server instance
+      errorHandlerInstance(ee);
+      assert.strictEqual(ee.listenerCount(UNCAUGHT_EVENT), 1,
+        'Listeners on event should now be one');
+    });
   });
-  // exercise the valid path without an error having occured on the req/res
-  var req = new EventEmitter;
-  var res = new EventEmitter;
-  res.statusCode = 200;
-  t.deepEqual(res.listenerCount('finish'), 0,
-    'There should be zero listeners on the finish event');
-  t.doesNotThrow(function () {
-    requestHandlerInstance(req, res, noOp);
-  });
-  t.deepEqual(res.listenerCount('finish'), 1,
-    'There should be one listener on the finish event');
-  t.doesNotThrow(function () {
-    res.emit('finish');
-  });
-  // exercise the valid path with an error having occured on the req/res
-  var client = {
-    sendError: function () {
-      t.pass('sendError should be called');
-    }
-  };
-  var config = {
-    getServiceContext: function ( ) {
-      t.pass('getServiceContext should be called');
-      return {
-        service: 'stub-service',
-        version: 'stub-version'
-      }
-    },
-    lacksCredentials: function () {
-      return false;
-    }
-  };
-  ee.removeAllListeners();
-  errorHandlerInstance = restifyInterface(client, config);
-  requestHandlerInstance = errorHandlerInstance(ee);
-  req = new EventEmitter;
-  res = new EventEmitter;
-  res.statusCode = 500;
-  t.deepEqual(res.listenerCount('finish'), 0,
-    'There should be zero listeners on the finish event');
-  t.doesNotThrow(function () {
-    requestHandlerInstance(req, res, noOp);
-  });
-  t.deepEqual(res.listenerCount('finish'), 1,
-    'There should be one listener on the finish event');
-  t.doesNotThrow(function () {
-    res.emit('finish');
-  });
-  client.sendError = function () {
-    t.pass('sendError should be called');
-    t.end();
-  };
-  // exercise the server uncaughtException path
-  t.doesNotThrow(function () {
-    ee.emit('uncaughtException');
+  describe('Request handler lifecycle events', function () {
+    var ee = new EventEmitter;
+    var errorHandlerInstance = restifyInterface(null, null);
+    var requestHandlerInstance = errorHandlerInstance(ee);
+    describe('default path on invalid input', function () {
+      it('Should not throw', function () {
+        assert.doesNotThrow(function () {
+          requestHandlerInstance(null, null, noOp);
+        });
+      });
+    });
+    describe('default path without req/res error', function () {
+      ee.removeAllListeners();
+      var req = new EventEmitter;
+      var res = new EventEmitter;
+      res.statusCode = 200;
+      it('Should have 0 listeners on the finish event', function () {
+        assert.strictEqual(res.listenerCount(FINISH), 0);
+      });
+      it('Should not throw while handling the req/res objects', function () {
+        assert.doesNotThrow(function () {
+          requestHandlerInstance(req, res, noOp);
+        });
+      });
+      it('Should have 1 listener on the finish event after handling req/res', function () {
+        assert.strictEqual(res.listenerCount(FINISH), 1);
+      });
+      it('Should not throw when emitting the finish event', function () {
+        assert.doesNotThrow(function () {
+          res.emit(FINISH);
+        });
+      });
+    });
+    describe('default path with req/res error', function (done) {
+      ee.removeAllListeners();
+      var client = {
+        sendError: function () {
+          assert(true, 'sendError should be called');
+        }
+      };
+      var config = {
+        getServiceContext: function ( ) {
+          assert(true, 'getServiceContext should be called');
+          return {
+            service: 'stub-service',
+            version: 'stub-version'
+          }
+        },
+        lacksCredentials: function () {
+          return false;
+        },
+        getVersion: function () {
+          return '1';
+        }
+      };
+      var errorHandlerInstance = restifyInterface(client, config);
+      var requestHandlerInstance = errorHandlerInstance(ee);
+      var req = new EventEmitter;
+      var res = new EventEmitter;
+      res.statusCode = 500;
+      it('Should have 0 Listeners on the finish event', function () {
+        assert.strictEqual(res.listenerCount(FINISH), 0);
+      });
+      it('Should not throw on instantiation', function () {
+        assert.doesNotThrow(function () {
+          requestHandlerInstance(req, res, noOp);
+        });
+      });
+      it('Should have 1 listener on the finish event after instantiation', function () {
+        assert.strictEqual(res.listenerCount(FINISH), 1);
+      });
+      it('Should not throw on emission of the finish event', function () {
+        assert.doesNotThrow(function () {
+          res.emit(FINISH);
+        });
+      });
+      describe('Exercise the uncaughtException event path', function () {
+        it('Should call the sendError function property on the client', function (done) {
+          client.sendError = function () {
+            assert(true, 'sendError should be called');
+            done();
+          };
+          assert.doesNotThrow(function () {
+            ee.emit(UNCAUGHT_EVENT);
+          });
+        });
+      });
+    });
   });
 });

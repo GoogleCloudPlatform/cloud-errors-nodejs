@@ -14,181 +14,93 @@
  * limitations under the License.
  */
 
-var test = require('tape');
+var assert = require('assert');
 var extractFromObject = require('../../src/error-extractors/object.js');
 var ErrorMessage = require('../../src/classes/error-message.js');
 
-test(
-  'Test Object Extraction Message'
-  , function ( t ) {
-
-    var MESSAGE = "test";
-
-    var em = new ErrorMessage();
-    var err = { message: MESSAGE };
-
-    t.plan(2);
-
-    extractFromObject(err, em);
-    t.assert(
-      em.message === MESSAGE
-      , "Given a valid message the error message should absorb that value"
-    );
-
+describe('Object value extraction as error message', function () {
+  var em, err;
+  beforeEach(function () {
     em = new ErrorMessage();
     err = {};
-    extractFromObject(err, em);
-    t.assert(
-      em.message === ""
-      , "Given that the object does not have a message property the ErrorMessage will retain its default value"
-    );
-  }
-);
-
-test(
-  'Test Object Extraction User'
-  , function ( t ) {
-
-    var USER = "test";
-
-    var em = new ErrorMessage();
-    var err = { user: USER };
-
-    t.plan(2);
-
-    extractFromObject(err, em);
-    t.assert(
-      em.context.user === USER
-      , "Given a valid user the error message should absorb that value"
-    );
-
-    em = new ErrorMessage();
-    err = {};
-    extractFromObject(err, em);
-    t.assert(
-      em.context.user === ""
-      , "Given that the object does not have a user property the ErrorMessage will retain its default value"
-    );
-  }
-);
-
-test(
-  'Test Object Extraction filePath'
-  , function ( t ) {
-
-    var PATH = "test";
-
-    var em = new ErrorMessage();
-    var err = { filePath: PATH };
-
-    t.plan(2);
-
-    extractFromObject(err, em);
-    t.assert(
-      em.context.reportLocation.filePath === PATH
-      , "Given a valid filePath the error message should absorb that value"
-    );
-
-    em = new ErrorMessage();
-    err = {};
-    extractFromObject(err, em);
-    t.assert(
-      em.context.reportLocation.filePath === ""
-      , "Given that the object does not have a filePath property the ErrorMessage will retain its default value"
-    );
-  }
-);
-
-test(
-  'Test Object Extraction lineNumber'
-  , function ( t ) {
-
-    var LINE_NUMBER = 10;
-
-    var em = new ErrorMessage();
-    var err = { lineNumber: LINE_NUMBER };
-
-    t.plan(2);
-
-    extractFromObject(err, em);
-    t.assert(
-      em.context.reportLocation.lineNumber === LINE_NUMBER
-      , "Given a valid lineNumber the error message should absorb that value"
-    );
-
-    em = new ErrorMessage();
-    err = {};
-    extractFromObject(err, em);
-    t.assert(
-      em.context.reportLocation.lineNumber === 0
-      , "Given that the object does not have a lineNumber property the ErrorMessage will retain its default value"
-    );
-  }
-);
-
-test(
-  'Test Object Extraction functionName'
-  , function ( t ) {
-
-    var FUNCTION_NAME = "test";
-
-    var em = new ErrorMessage();
-    var err = { functionName: FUNCTION_NAME };
-
-    t.plan(2);
-
-    extractFromObject(err, em);
-    t.assert(
-      em.context.reportLocation.functionName === FUNCTION_NAME
-      , "Given a valid functionName the error message should absorb that value"
-    );
-
-    em = new ErrorMessage();
-    err = {};
-    extractFromObject(err, em);
-    t.assert(
-      em.context.reportLocation.functionName === ""
-      , "Given that the object does not have a functionName property the ErrorMessage will retain its default value"
-    );
-  }
-);
-
-test(
-  'Test Error Class Extraction Service'
-  , function ( t ) {
-
-    var TEST_SERVICE_VALID = {service: 'test', version: 'test'};
+  });
+  describe('Message field', function () {
+    it('Should write to the field given valid input', function () {
+      var MESSAGE = 'test';
+      err = {message: MESSAGE};
+      extractFromObject(err, em);
+      assert.strictEqual(em.message, MESSAGE);
+    });
+    it('Should default the field given lack-of input', function () {
+      extractFromObject(err, em);
+      assert.strictEqual(em.message, '');
+    });
+  });
+  describe('User field', function () {
+    it('Should write to the field given valid input', function () {
+      var USER = 'test';
+      err.user = USER;
+      extractFromObject(err, em);
+      assert.strictEqual(em.context.user, USER);
+    });
+    it('Should default the field given lack-of input', function () {
+      extractFromObject(err, em);
+      assert.strictEqual(em.context.user, '');
+    });
+  });
+  describe('filePath field', function () {
+    it('Should write to the field given valid input', function () {
+      var PATH = 'test';
+      err.filePath = PATH;
+      extractFromObject(err, em);
+      assert.strictEqual(em.context.reportLocation.filePath, PATH);
+    });
+    it('Should default the field given lack-of input', function () {
+      extractFromObject(err, em);
+      assert.strictEqual(em.context.reportLocation.filePath, '');
+    });
+  });
+  describe('lineNumber field', function () {
+    it('Should write to the field given valid input', function () {
+      var LINE_NUMBER = 10;
+      err.lineNumber = LINE_NUMBER;
+      extractFromObject(err, em);
+      assert.strictEqual(em.context.reportLocation.lineNumber, LINE_NUMBER);
+    });
+    it('Should default the field given lack-of input', function () {
+      extractFromObject(err, em);
+      assert.strictEqual(em.context.reportLocation.lineNumber, 0);
+    });
+  });
+  describe('functionName field', function () {
+    it('Should write to the field given valid input', function () {
+      var FUNCTION_NAME = 'test';
+      err.functionName = FUNCTION_NAME;
+      extractFromObject(err, em);
+      assert.strictEqual(em.context.reportLocation.functionName, FUNCTION_NAME);
+    });
+    it('Should default the field given lack-of input', function () {
+      extractFromObject(err, em);
+      assert.strictEqual(em.context.reportLocation.functionName, '');
+    });
+  });
+  describe('serviceContext field', function () {
     var TEST_SERVICE_DEFAULT = {service: 'node', version: undefined};
-    var TEST_SERVICE_INVALID = 12;
-
-    t.plan(3);
-
-    var em = new ErrorMessage();
-    var err = { serviceContext: TEST_SERVICE_VALID };
-
-    extractFromObject(err, em);
-    t.deepEqual(
-      em.serviceContext
-      , TEST_SERVICE_VALID
-      , "Given a valid service context the value should be set on the error message"
-    );
-
-    em = new ErrorMessage();
-    err = { serviceContext: TEST_SERVICE_INVALID };
-    extractFromObject(err, em);
-    t.deepEqual(
-      em.serviceContext
-      , TEST_SERVICE_DEFAULT
-      , "Given an invalid service context the error message should retain default values on service context"
-    );
-
-    em = new ErrorMessage();
-    err = {}
-    extractFromObject(err, em);
-    t.deepEqual(
-      em.serviceContext
-      , TEST_SERVICE_DEFAULT
-      , "Given no service context the error message should retain default values on service context"
-    );
-  }
-);
+    it('Should write to the field given valid input', function () {
+      var TEST_SERVICE_VALID = {service: 'test', version: 'test'};
+      err.serviceContext = TEST_SERVICE_VALID;
+      extractFromObject(err, em);
+      assert.deepEqual(em.serviceContext, TEST_SERVICE_VALID);
+    });
+    it('Should default the field given invalid input', function () {
+      var TEST_SERVICE_INVALID = 12;
+      err.serviceContext = TEST_SERVICE_INVALID;
+      extractFromObject(err, em);
+      assert.deepEqual(em.serviceContext, TEST_SERVICE_DEFAULT);
+    });
+    it('Should default the field given lack-of input', function () {
+      extractFromObject(err, em);
+      assert.deepEqual(em.serviceContext, TEST_SERVICE_DEFAULT);
+    });
+  });
+});

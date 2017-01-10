@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-var test = require('tape');
 var lodash = require('lodash');
+var assert = require('assert');
 var merge = lodash.merge;
 var expressInterface = require('../../src/interfaces/express.js');
 var ErrorMessage = require('../../src/classes/error-message.js');
@@ -23,74 +23,69 @@ var Fuzzer = require('../../utils/fuzzer.js');
 var Configuration = require('../fixtures/configuration.js');
 var createLogger = require('../../src/logger.js');
 
-test(
-  "Given invalid, variable input the express interface handler setup should not throw errors"
-  , function ( t ) {
-
-    var f = new Fuzzer();
-
-    t.doesNotThrow(
-      function ( ) {
-
-        f.fuzzFunctionForTypes(
-          expressInterface
-          , ["object", "object"]
+describe('expressInterface', function () {
+  describe('Exception handling', function () {
+    describe('Given invalid input', function () {
+      it('Should not throw errors', function () {
+        var f = new Fuzzer();
+        assert.doesNotThrow(
+          function () {
+            f.fuzzFunctionForTypes(
+              expressInterface
+              , ["object", "object"]
+            );
+            return;
+          }
         );
-
-        return ;
-      }
-      , undefined
-      , "The express interface handler setup should not throw when given invalid types"
-    );
-
-    t.end();
-  }
-);
-
-test(
-  [
-    "Given valid setup variables from the handler setup, the bound express"
-    , "error handler should produce a determinate error message and callback to"
-    , "the given callback function"
-  ].join(" ")
-  , function ( t ) {
-
-    var sendError = function ( ) {
-
-      t.pass("The interface should callback to the sendError function");
-    };
-    var nextCb = function ( ) {
-
-      t.pass("The interface should callback to the next callback function");
-    };
-    var stubbedClient = {
-      sendError: sendError
-    };
+      });
+    });
+  });
+  describe('Intended behaviour', function () {
     var stubbedConfig = new Configuration({
       serviceContext: {
         service: "a_test_service"
         , version: "a_version"
       }
     }, createLogger({logLevel: 4}));
+    stubbedConfig.lacksCredentials = function () {
+      return false;
+    };
+    var client = {
+      sendError: function () {
+        return;
+      } 
+    };
     var testError = new Error("This is a test");
-
-    var validBoundHandler = expressInterface(stubbedClient, stubbedConfig);
-
-    var res = validBoundHandler(testError, null, null, nextCb);
-
-    t.deepEqual(
-      res
-      , merge(new ErrorMessage().setMessage(testError.stack)
-        .setServiceContext(
-          stubbedConfig._serviceContext.service
-          , stubbedConfig._serviceContext.version
-        ), { eventTime: res.eventTime } )
-      , [
-          "The error message should be default values except for the supplied"
-          , "message field"
-        ].join(" ")
-    );
-
-    t.end();
-  }
-)
+    var validBoundHandler = expressInterface(client, stubbedConfig);
+    it('Should return the error message', function () {
+      var res = validBoundHandler(testError, null, null, null);
+      assert.deepEqual(
+        res,
+        merge(new ErrorMessage().setMessage(testError.stack)
+          .setServiceContext(
+            stubbedConfig._serviceContext.service,
+            stubbedConfig._serviceContext.version),
+          {eventTime: res.eventTime}
+        )
+      );
+    });
+    describe('Calling back to express builtins', function () {
+      it('Should callback to next', function (done) {
+        var nextCb = function () {
+          done();
+        };
+        validBoundHandler(testError, null, null, nextCb);
+      });
+      it('Should callback to sendError', function (done) {
+        var sendError = function () {
+          done();
+        };
+        var client = {
+          sendError: sendError
+        };
+        var handler = expressInterface(client, stubbedConfig);
+        handler(testError, null, null, function (){return;});
+      });
+    });
+  });
+});

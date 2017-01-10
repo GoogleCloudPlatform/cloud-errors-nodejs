@@ -14,54 +14,29 @@
  * limitations under the License.
  */
 
-var test = require('tape');
+var assert = require('assert');
 var ErrorMessage = require('../../src/classes/error-message.js');
 var handleObjectAsError = require('../../src/error-handlers/object.js');
-var errorClassParsingUtils = require('../../src/error-parsing-utils.js');
 
-
-test(
-  'Given variable inputs and input-types in the handleObjectAsError handler'
-  , function ( t ) {
-
-    var em = new ErrorMessage();
-
-    t.plan(6);
-
-    t.doesNotThrow(
-      handleObjectAsError.bind(null, undefined, em)
-      , undefined
-      , "Should not throw when given undefined"
-    );
-
-    t.doesNotThrow(
-      handleObjectAsError.bind(null, null, em)
-      , undefined
-      , "Should not throw when given null"
-    );
-
-    t.doesNotThrow(
-      handleObjectAsError.bind(null, "string_test", em)
-      , undefined
-      , "Should not throw when given a string"
-    );
-
-    t.doesNotThrow(
-      handleObjectAsError.bind(null, new Error("test"), em)
-      , undefined
-      , "Should not throw when given an error"
-    );
-
-    t.doesNotThrow(
-      handleObjectAsError.bind(null, 1.3, em)
-      , undefined
-      , "Should not throw when given a number"
-    );
-
-    t.doesNotThrow(
-      handleObjectAsError.bind(null, {}, em)
-      , undefined
-      , "Should not throw when given a valid input"
-    );
-  }
-);
+describe('handleObjectAsError behaviour under varying inputs', function () {
+  var em;
+  beforeEach(function () {em = new ErrorMessage();});
+  it('Should not throw given undefined', function () {
+    assert.doesNotThrow(handleObjectAsError.bind(null, undefined, em));
+  });
+  it('Should not throw given null', function () {
+    assert.doesNotThrow(handleObjectAsError.bind(null, null, em));
+  });
+  it('Should not throw given a string', function () {
+    assert.doesNotThrow(handleObjectAsError.bind(null, 'msg', em));
+  });
+  it('Should not throw given an instance of Error', function () {
+    assert.doesNotThrow(handleObjectAsError.bind(null, new Error(), em));
+  });
+  it('Should not throw given a number', function () {
+    assert.doesNotThrow(handleObjectAsError.bind(null, 1.3, em));
+  });
+  it('Should not throw given valid input', function () {
+    assert.doesNotThrow(handleObjectAsError.bind(null, {}, em));
+  });
+});

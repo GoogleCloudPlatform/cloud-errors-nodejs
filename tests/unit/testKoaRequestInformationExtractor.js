@@ -14,78 +14,54 @@
  * limitations under the License.
  */
 
-var test = require('tape');
+var assert = require('assert');
 var koaRequestInformationExtractor = require('../../src/request-extractors/koa.js');
 var Fuzzer = require('../../utils/fuzzer.js');
 
-test(
-  'Test request information extraction given invalid input'
-  , function ( t ) {
-
-    var DEFAULT_RETURN_VALUE = {
-      method: ""
-      , url: ""
-      , userAgent: ""
-      , referrer: ""
-      , statusCode: 0
-      , remoteAddress: ""
-    };
-
-    var f = new Fuzzer();
-    var cbFn = function ( value ) {
-
-      t.deepEqual(
-        value
-        , DEFAULT_RETURN_VALUE
-        , "Given invalid arguments the express information extractor should return the default object"
-      );
-    }
-
-    f.fuzzFunctionForTypes(
-      koaRequestInformationExtractor
-      , ["object", "object"]
-      , cbFn
-    );
-
-    t.end();
-  }
-);
-
-test(
-  'Test request information extraction given valid input'
-  , function ( t ) {
-
-    var FULL_REQ_DERIVATION_VALUE = {
-      method: "STUB_METHOD"
-      , url: "www.TEST-URL.com"
-      , headers: {
-        'user-agent': "Something like Mozilla"
-        , referrer: "www.ANOTHER-TEST.com"
-      }
-      , ip: "0.0.0.0"
-    };
-    var FULL_RES_DERIVATION_VALUE = {
-      'status': 200
-    };
-
-    var FULL_REQ_EXPECTED_VALUE = {
-      method: "STUB_METHOD"
-      , url: "www.TEST-URL.com"
-      , userAgent: "Something like Mozilla"
-      , referrer: "www.ANOTHER-TEST.com"
-      , remoteAddress: '0.0.0.0'
-      , statusCode: 200
-    }
-
-    t.plan(1);
-
-    t.deepEqual(
-      koaRequestInformationExtractor(FULL_REQ_DERIVATION_VALUE, FULL_RES_DERIVATION_VALUE)
-      , FULL_REQ_EXPECTED_VALUE
-      , [
-        "Given a valid payload for the request and response objects the output value"
-        , "Should assimilate these values to resemble the expected output"
-      ].join(" ")
-    );
-  }
-)
+describe('koaRequestInformationExtractor', function () {
+  describe('Behaviour under invalid input', function () {
+    it('Should produce a default value', function () {
+      var DEFAULT_RETURN_VALUE = {
+        method: '',
+        url: '',
+        userAgent: '',
+        referrer: '',
+        statusCode: 0,
+        remoteAddress: ''
+      };
+      var f = new Fuzzer();
+      var cbFn = function (value) {
+        assert.deepEqual(value, DEFAULT_RETURN_VALUE);
+      };
+      f.fuzzFunctionForTypes(koaRequestInformationExtractor,
+        ['object', 'object'], cbFn);
+    });
+  });
+  describe('Behaviour under valid input', function () {
+    it('Should produce the expected value', function () {
+      var FULL_REQ_DERIVATION_VALUE = {
+        method: 'STUB_METHOD',
+        url: 'www.TEST-URL.com',
+        headers: {
+          'user-agent': 'Something like Mozilla',
+          referrer: 'www.ANOTHER-TEST.com'
+        },
+        ip: '0.0.0.0'
+      };
+      var FULL_RES_DERIVATION_VALUE = {
+        'status': 200
+      };
+      var FULL_REQ_EXPECTED_VALUE = {
+        method: 'STUB_METHOD',
+        url: 'www.TEST-URL.com',
+        userAgent: 'Something like Mozilla',
+        referrer: 'www.ANOTHER-TEST.com',
+        remoteAddress: '0.0.0.0',
+        statusCode: 200
+      };
+      assert.deepEqual(
+        koaRequestInformationExtractor(FULL_REQ_DERIVATION_VALUE, FULL_RES_DERIVATION_VALUE),
+        FULL_REQ_EXPECTED_VALUE);
+    });
+  });
+});

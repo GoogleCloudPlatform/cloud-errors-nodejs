@@ -14,47 +14,33 @@
  * limitations under the License.
  */
 
-var test = require('tape');
+var assert = require('assert');
 var hapiRequestInformationExtractor = require('../../src/request-extractors/hapi.js');
 var Fuzzer = require('../../utils/fuzzer.js');
 
-test(
-  'Test request information extraction given invalid input'
-  , function ( t ) {
-
-    var DEFAULT_RETURN_VALUE = {
-      method: ""
-      , url: ""
-      , userAgent: ""
-      , referrer: ""
-      , statusCode: 0
-      , remoteAddress: ""
-    };
-
-    var f = new Fuzzer();
-    var cbFn = function ( value ) {
-
-      t.deepEqual(
-        value
-        , DEFAULT_RETURN_VALUE
-        , "Given invalid arguments the express information extractor should return the default object"
+describe('hapiRequestInformationExtractor behaviour', function () {
+  describe('behaviour given invalid input', function () {
+    it('Should produce the default value', function () {
+      var DEFAULT_RETURN_VALUE = {
+        method: "",
+        url: "",
+        userAgent: "",
+        referrer: "",
+        statusCode: 0,
+        remoteAddress: ""
+      };
+      var f = new Fuzzer();
+      var cbFn = function (value) {
+        assert.deepEqual(value, DEFAULT_RETURN_VALUE);
+      };
+      f.fuzzFunctionForTypes(
+        hapiRequestInformationExtractor
+        , ["object"]
+        , cbFn
       );
-    }
-
-    f.fuzzFunctionForTypes(
-      hapiRequestInformationExtractor
-      , ["object"]
-      , cbFn
-    );
-
-    t.end();
-  }
-);
-
-test(
-  'Test request information extraction given valid input'
-  , function ( t ) {
-
+    });
+  });
+  describe('behaviour given valid input', function () {
     var FULL_REQ_DERIVATION_VALUE = {
       method: "STUB_METHOD"
       , url: "www.TEST-URL.com"
@@ -70,7 +56,6 @@ test(
         statusCode: 200
       }
     };
-
     var FULL_REQ_EXPECTED_VALUE = {
       method: "STUB_METHOD"
       , url: "www.TEST-URL.com"
@@ -79,7 +64,6 @@ test(
       , remoteAddress: '0.0.0.1'
       , statusCode: 200
     };
-
     var PARTIAL_REQ_DERIVATION_VALUE = {
       method: "STUB_METHOD_#2"
       , url: "www.SUPER-TEST.com"
@@ -96,7 +80,6 @@ test(
         }
       }
     };
-
     var PARTIAL_REQ_EXPECTED_VALUE = {
       method: "STUB_METHOD_#2"
       , url: "www.SUPER-TEST.com"
@@ -105,7 +88,6 @@ test(
       , remoteAddress: "0.0.2.1"
       , statusCode: 201
     };
-
     var ANOTHER_PARTIAL_REQ_DERIVATION_VALUE = {
       method: "STUB_METHOD_#2"
       , url: "www.SUPER-TEST.com"
@@ -114,7 +96,6 @@ test(
         , referrer: "www.SUPER-ANOTHER-TEST.com"
       }
     };
-
     var ANOTHER_PARTIAL_REQ_EXPECTED_VALUE = {
       method: "STUB_METHOD_#2"
       , url: "www.SUPER-TEST.com"
@@ -123,34 +104,21 @@ test(
       , remoteAddress: ""
       , statusCode: 0
     };
-
-    t.plan(3);
-
-    t.deepEqual(
-      hapiRequestInformationExtractor(FULL_REQ_DERIVATION_VALUE)
-      , FULL_REQ_EXPECTED_VALUE
-      , [
-        "Given a full valid derivation value with an x-forwarded-for header the"
-        , "output of the extractor should reflect these values"
-      ].join(" ")
-    );
-
-    t.deepEqual(
-      hapiRequestInformationExtractor(PARTIAL_REQ_DERIVATION_VALUE)
-      , PARTIAL_REQ_EXPECTED_VALUE
-      , [
-        "Given a partial valid derivation value without an x-forwarded-for"
-        , "header the output of the extractor should reflect these values"
-      ].join(" ")
-    );
-
-    t.deepEqual(
-      hapiRequestInformationExtractor(ANOTHER_PARTIAL_REQ_DERIVATION_VALUE)
-      , ANOTHER_PARTIAL_REQ_EXPECTED_VALUE
-      , [
-        "Given a partial valid derivation value without a remote address the"
-        , "extractor should reflect these values"
-      ].join(" ")
-    );
-  }
-);
+    it('Should produce the full request input', function () {
+      assert.deepEqual(
+        hapiRequestInformationExtractor(FULL_REQ_DERIVATION_VALUE),
+        FULL_REQ_EXPECTED_VALUE);
+    });
+    it('Should produce the partial request input', function () {
+      assert.deepEqual(
+        hapiRequestInformationExtractor(PARTIAL_REQ_DERIVATION_VALUE),
+        PARTIAL_REQ_EXPECTED_VALUE);
+    });
+    it('Should produce the second partial request input', function () {
+      assert.deepEqual(
+        hapiRequestInformationExtractor(ANOTHER_PARTIAL_REQ_DERIVATION_VALUE),
+        ANOTHER_PARTIAL_REQ_EXPECTED_VALUE
+      );
+    });
+  });
+});
