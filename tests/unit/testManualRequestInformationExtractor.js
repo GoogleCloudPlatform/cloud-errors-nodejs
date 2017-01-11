@@ -15,9 +15,8 @@
  */
 
 var assert = require('assert');
-var lodash = require('lodash');
-var omit = lodash.omit;
-var merge = lodash.merge;
+var omit = require('lodash.omit');
+var extend = require('extend');
 var manualRequestInformationExtractor = require('../../src/request-extractors/manual.js');
 var Fuzzer = require('../../utils/fuzzer.js');
 
@@ -60,7 +59,7 @@ describe('manualRequestInformationExtractor', function () {
       );
       assert.deepEqual(
         manualRequestInformationExtractor(omit(FULL_VALID_INPUT, "method")),
-        merge({}, FULL_VALID_INPUT, {method: ""}),
+        extend({}, FULL_VALID_INPUT, {method: ""}),
         [
           "Given a full valid input object sans the method property these values"
           , "should be reflected by the output of the request extraction"
@@ -68,7 +67,7 @@ describe('manualRequestInformationExtractor', function () {
       );
       assert.deepEqual(
         manualRequestInformationExtractor(omit(FULL_VALID_INPUT, "url")),
-        merge({}, FULL_VALID_INPUT, {url: ""}),
+        extend({}, FULL_VALID_INPUT, {url: ""}),
         [
           "Given a full valid input sans the url property these values should be"
           , "reflected by the output of the request extraction"
@@ -76,7 +75,7 @@ describe('manualRequestInformationExtractor', function () {
       );
       assert.deepEqual(
         manualRequestInformationExtractor(omit(FULL_VALID_INPUT, "userAgent")),
-        merge({}, FULL_VALID_INPUT, {"userAgent": ""}),
+        extend({}, FULL_VALID_INPUT, {"userAgent": ""}),
         [
           "Given a full valid input sans the userAgent property these values"
           , "should be reflected by the output of the request extraction"
@@ -84,7 +83,7 @@ describe('manualRequestInformationExtractor', function () {
       );
       assert.deepEqual(
         manualRequestInformationExtractor(omit(FULL_VALID_INPUT, "referrer")),
-        merge({}, FULL_VALID_INPUT, {referrer: ""}),
+        extend({}, FULL_VALID_INPUT, {referrer: ""}),
         [
           "Given a full valid input sans the referrer property these values"
           , "should be reflected by the output of the request extraction"
@@ -92,7 +91,7 @@ describe('manualRequestInformationExtractor', function () {
       );
       assert.deepEqual(
         manualRequestInformationExtractor(omit(FULL_VALID_INPUT, "statusCode")),
-        merge({}, FULL_VALID_INPUT, {statusCode: 0}),
+        extend({}, FULL_VALID_INPUT, {statusCode: 0}),
         [
           "Given a full valid input sans the statusCode property these values"
           , "should be reflected by the output of the request extraction"
@@ -100,7 +99,7 @@ describe('manualRequestInformationExtractor', function () {
       );
       assert.deepEqual(
         manualRequestInformationExtractor(omit(FULL_VALID_INPUT, "remoteAddress")),
-        merge({}, FULL_VALID_INPUT, {remoteAddress: ""}),
+        extend({}, FULL_VALID_INPUT, {remoteAddress: ""}),
         [
           "Given a full valid input sans the remoteAddress property these values"
           , "should be reflected by the output of the request extraction"

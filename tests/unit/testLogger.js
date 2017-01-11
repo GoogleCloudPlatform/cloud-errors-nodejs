@@ -16,7 +16,6 @@
 
 'use strict';
 var assert = require('assert');
-var lodash = require('lodash');
 var createLogger = require('../../src/logger.js');
 
 describe('logger', function () {

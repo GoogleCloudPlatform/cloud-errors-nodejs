@@ -1,8 +1,8 @@
-var lodash = require('lodash');
-var isObject = lodash.isObject;
-var has = lodash.has;
-var isString = lodash.isString;
-var isNumber = lodash.isNumber;
+var has = require('lodash.has');
+var is = require('is');
+var isObject = is.object;
+var isString = is.string;
+var isNumber = is.number;
 var logger = require('@google/cloud-diagnostics-common').logger;
 /**
  * Creates an instance of the Google Cloud Diagnostics logger class. This

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-var lodash = require('lodash');
-var isFunction = lodash.isFunction;
-var isPlainObject = lodash.isPlainObject;
-var has = lodash.has;
+var has = require('lodash.has');
+var is = require('is');
+var isFunction = is.fn;
+var isObject = is.object;
 var assert = require('assert');
 var hapiInterface = require('../../src/interfaces/hapi.js');
 var ErrorMessage = require('../../src/classes/error-message.js');
@@ -41,7 +41,7 @@ describe('Hapi interface', function () {
     var plugin;
     beforeEach(function () {plugin = hapiInterface(null, givenConfig)});
     it('should have plain object as plugin', function () {
-      assert(isPlainObject(plugin));
+      assert(isObject(plugin));
     });
     it('plugin should have a register function property', function () {
       assert(has(plugin, 'register') && isFunction(plugin.register));
@@ -49,7 +49,7 @@ describe('Hapi interface', function () {
     it('the plugin\'s register property should have an attributes property',
       function () {
         assert(has(plugin.register, 'attributes') &&
-          isPlainObject(plugin.register.attributes));
+          isObject(plugin.register.attributes));
       }
     );
     it('the plugin\'s attribute property should have a name property',

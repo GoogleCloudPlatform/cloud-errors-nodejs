@@ -15,8 +15,8 @@
  */
 
 'use strict';
-var lodash = require('lodash');
-var isPlainObject = lodash.isPlainObject;
+var is = require('is');
+var isObject = is.object;
 var extractFromObject = require('../error-extractors/object.js');
 var handleUnknownAsError = require('./unknown.js');
 
@@ -33,7 +33,7 @@ var handleUnknownAsError = require('./unknown.js');
  */
 function handleObjectAsError(err, errorMessage) {
 
-  if (isPlainObject(err)) {
+  if (isObject(err)) {
 
     extractFromObject(err, errorMessage);
   } else {

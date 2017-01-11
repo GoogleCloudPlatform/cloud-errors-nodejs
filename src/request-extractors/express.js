@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 'use strict';
-var lodash = require('lodash');
-var isFunction = lodash.isFunction;
-var isObject = lodash.isObject;
+var is = require('is');
+var isFunction = is.fn;
+var isObject = is.object;
 var RequestInformationContainer =
     require('../classes/request-information-container.js');
 

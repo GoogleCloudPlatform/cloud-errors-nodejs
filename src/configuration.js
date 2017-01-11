@@ -18,14 +18,14 @@
 var env = process.env;
 var commonDiag = require('@google/cloud-diagnostics-common');
 var utils = commonDiag.utils;
-var lodash = require('lodash');
-var isPlainObject = lodash.isPlainObject;
-var isBoolean = lodash.isBoolean;
-var isString = lodash.isString;
-var isNumber = lodash.isNumber;
-var isEmpty = lodash.isEmpty;
-var isNull = lodash.isNull;
-var has = lodash.has;
+var has = require('lodash.has');
+var is = require('is');
+var isObject = is.object;
+var isBoolean = is.boolean;
+var isString = is.string;
+var isNumber = is.number;
+var isEmpty = is.empty;
+var isNull = is.null;
 var version = require('../package.json').version;
 
 /**
@@ -180,7 +180,7 @@ var Configuration = function(givenConfig, logger) {
    * @type {Object|Null}
    * @defaultvalue null
    */
-  this._givenConfiguration = isPlainObject(givenConfig) ? givenConfig : {};
+  this._givenConfiguration = isObject(givenConfig) ? givenConfig : {};
   this._checkLocalServiceContext();
   this._gatherLocalConfiguration();
 };
@@ -235,7 +235,7 @@ Configuration.prototype._checkLocalServiceContext = function() {
   this._serviceContext.service = isString(service) ? service : 'node';
   this._serviceContext.version = isString(version) ? version : undefined;
 
-  if (isPlainObject(this._givenConfiguration.serviceContext)) {
+  if (isObject(this._givenConfiguration.serviceContext)) {
     if (isString(this._givenConfiguration.serviceContext.service)) {
       this._serviceContext.service = 
         this._givenConfiguration.serviceContext.service;
@@ -296,7 +296,7 @@ Configuration.prototype._gatherLocalConfiguration = function() {
   } else if (has(this._givenConfiguration, 'keyFilename')) {
     throw new Error('config.keyFilename must be a string');
   }
-  if (isPlainObject(this._givenConfiguration.credentials)) {
+  if (isObject(this._givenConfiguration.credentials)) {
     this._credentials = this._givenConfiguration.credentials;
   } else if (has(this._givenConfiguration, 'credentials')) {
     throw new Error('config.credentials must be a valid credentials object');

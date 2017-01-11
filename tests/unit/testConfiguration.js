@@ -16,9 +16,8 @@
 
 'use strict';
 var assert = require('assert');
-var lodash = require('lodash');
-var isNumber = lodash.isNumber;
-var merge = lodash.merge;
+var isNumber = require('is').number;
+var merge = require('lodash.merge');
 var Configuration = require('../fixtures/configuration.js');
 var version = require('../../package.json').version;
 var Fuzzer = require('../../utils/fuzzer.js');

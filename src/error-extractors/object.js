@@ -15,9 +15,9 @@
  */
 
 'use strict';
-var lodash = require('lodash');
-var isObject = lodash.isObject;
-var has = lodash.has;
+var has = require('lodash.has');
+var is = require('is');
+var isObject = is.object;
 
 /**
  * Attempts to extract error information given an object as the input for the

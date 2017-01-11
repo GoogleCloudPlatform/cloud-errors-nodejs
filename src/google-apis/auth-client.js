@@ -17,9 +17,9 @@
 'use strict';
 var commonDiag = require('@google/cloud-diagnostics-common');
 var logger = require('../logger.js');
-var lodash = require('lodash');
-var isFunction = lodash.isFunction;
-var isString = lodash.isString;
+var is = require('is');
+var isFunction = is.fn;
+var isString = is.string;
 
 /* @const {Array<String>} list of scopes needed to work with the errors api. */
 var SCOPES = ['https://www.googleapis.com/auth/cloud-platform'];

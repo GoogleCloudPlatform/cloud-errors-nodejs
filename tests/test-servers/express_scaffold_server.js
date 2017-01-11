@@ -16,8 +16,7 @@
 
 var WARNING_HEADER = "\n!! -WARNING-";
 var EXCLAMATION_LN = "\n!!";
-var lodash = require('lodash');
-var has = lodash.has;
+var has = require('lodash.has');
 var express = require('express');
 var app = express();
 var errorHandler = require('../../index.js')({

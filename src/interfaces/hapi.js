@@ -15,10 +15,9 @@
  */
 
 'use strict';
-var lodash = require('lodash');
-var isPlainObject = lodash.isPlainObject;
-var isObject = lodash.isObject;
-var isFunction = lodash.isFunction;
+var is = require('is');
+var isObject = is.object;
+var isFunction = is.fn;
 var ErrorMessage = require('../classes/error-message.js');
 var hapiRequestInformationExtractor = require('../request-extractors/hapi.js');
 var errorHandlerRouter = require('../error-router.js');
@@ -114,7 +113,7 @@ function makeHapiPlugin(client, config) {
   }
 
   var hapiPlugin = {register : hapiRegisterFunction};
-  var version = (isPlainObject(config) && config.getVersion()) ?
+  var version = (isObject(config) && config.getVersion()) ?
     config.getVersion() : '0.0.0';
 
   hapiPlugin.register.attributes = {

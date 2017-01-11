@@ -21,12 +21,12 @@ var RequestHandler = require('../../src/google-apis/auth-client.js');
 var ErrorMessage = require('../../src/classes/error-message.js');
 var Configuration = require('../fixtures/configuration.js');
 var createLogger = require('../../src/logger.js');
-var lodash = require('lodash');
-var isObject = lodash.isObject;
-var isString = lodash.isString;
-var isEmpty = lodash.isEmpty;
-var forEach = lodash.forEach;
-var assign = lodash.assign;
+var is = require('is');
+var isObject = is.object;
+var isString = is.string;
+var isEmpty = is.empty;
+var forEach = require('lodash.foreach');
+var assign = require('lodash.assign');
 var client;
 
 

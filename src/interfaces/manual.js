@@ -15,10 +15,10 @@
  */
 
 'use strict';
-var lodash = require('lodash');
-var isString = lodash.isString;
-var isObject = lodash.isObject;
-var isFunction = lodash.isFunction;
+var is = require('is');
+var isString = is.string;
+var isObject = is.object;
+var isFunction = is.fn;
 var ErrorMessage = require('../classes/error-message.js');
 var manualRequestInformationExtractor =
     require('../request-extractors/manual.js');

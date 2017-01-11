@@ -15,7 +15,7 @@
  */
 
 'use strict';
-var isString = require('lodash').isString;
+var isString = require('is').string;
 
 /**
  * Handles validation of an error which has been indicated to be of type String.

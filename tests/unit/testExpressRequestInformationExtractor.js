@@ -18,7 +18,7 @@ var assert = require('assert');
 var expressRequestInformationExtractor = require('../../src/request-extractors/express.js');
 
 var Fuzzer = require('../../utils/fuzzer.js');
-var _ = require('lodash');
+var extend = require('extend');
 
 describe('Behaviour under varying input',
   function () {
@@ -101,7 +101,7 @@ describe('Behaviour under varying input',
         , statusCode: 201
       };
       var headerFactory = function (toDeriveFrom) {
-        var lrn = _.assign({}, toDeriveFrom);
+        var lrn = extend({}, toDeriveFrom);
         lrn.header = function ( toRet ) {
           if (lrn.hasOwnProperty(toRet)) {
             return lrn[toRet];

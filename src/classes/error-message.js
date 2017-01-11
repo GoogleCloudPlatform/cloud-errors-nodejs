@@ -15,10 +15,10 @@
  */
 
 'use strict';
-var lodash = require('lodash');
-var isString = lodash.isString;
-var isNumber = lodash.isNumber;
-var isObject = lodash.isObject;
+var is = require('is');
+var isString = is.string;
+var isNumber = is.number;
+var isObject = is.object;
 
 /**
  * The constructor for ErrorMessage takes no arguments and is solely meant to

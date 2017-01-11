@@ -15,8 +15,7 @@
  */
 
 var assert = require('assert');
-var lodash = require('lodash');
-var isString = lodash.isString;
+var isString = require('is').string;
 var uncaughtSetup = require('../../src/interfaces/uncaught.js');
 var Configuration = require('../fixtures/configuration.js');
 var createLogger = require('../../src/logger.js');

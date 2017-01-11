@@ -15,9 +15,9 @@
  */
 
 'use strict';
-var lodash = require('lodash');
-var isObject = lodash.isObject;
-var isFunction = lodash.isFunction;
+var is = require('is');
+var isObject = is.object;
+var isFunction = is.fn;
 var ErrorMessage = require('../classes/error-message.js');
 var expressRequestInformationExtractor =
     require('../request-extractors/express.js');

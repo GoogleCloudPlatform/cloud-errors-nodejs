@@ -15,9 +15,9 @@
  */
 
 'use strict';
-var lodash = require('lodash');
-var isNumber = lodash.isNumber;
-var isFunction = lodash.isFunction;
+var is = require('is');
+var isNumber = is.number;
+var isFunction = is.function;
 
 /**
  * Handles routing and validation for parsing an error which has been indicated

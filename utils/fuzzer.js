@@ -15,17 +15,17 @@
  */
 
 'use strict';
-var lodash = require('lodash');
-var random = lodash.random;
-var isNumber = lodash.isNumber;
-var isObject = lodash.isObject;
-var isString = lodash.isString;
-var isArray = lodash.isArray;
-var isNull = lodash.isNull;
-var indexOf = lodash.indexOf;
-var without = lodash.without;
-var maxBy = lodash.maxBy;
-var isFunction = lodash.isFunction;
+var indexOf = require('lodash.indexof');
+var without = require('lodash.without');
+var maxBy = require('lodash.maxby');
+var random = require('lodash.random');
+var is = require('is');
+var isNumber = is.number;
+var isObject = is.object;
+var isString = is.string;
+var isArray = is.array;
+var isNull = is.null;
+var isFunction = is.function;
 
 function Fuzzer ( ) { }
 

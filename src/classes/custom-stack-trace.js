@@ -15,10 +15,10 @@
  */
 
 'use strict';
-var lodash = require('lodash');
-var isString = lodash.isString;
-var isNumber = lodash.isNumber;
-var isFunction = lodash.isFunction;
+var is = require('is');
+var isString = is.string;
+var isNumber = is.number;
+var isFunction = is.fn;
 
 /**
  * A function which is used as a default substitute to handle cases where an

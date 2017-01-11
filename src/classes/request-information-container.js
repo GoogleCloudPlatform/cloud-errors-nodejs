@@ -15,9 +15,9 @@
  */
 
 'use strict';
-var lodash = require('lodash');
-var isString = lodash.isString;
-var isNumber = lodash.isNumber;
+var is = require('is');
+var isString = is.string;
+var isNumber = is.number;
 
 /**
  * The constructor for RequestInformationContainer does not take any arugments

@@ -23,6 +23,15 @@
     "jsdoc": "git+https://github.com/jsdoc3/jsdoc.git",
     "jshint": "^2.9.2",
     "koa": "^1.2.0",
+    "lodash.assign": "^4.2.0",
+    "lodash.foreach": "^4.5.0",
+    "lodash.indexof": "^4.0.5",
+    "lodash.maxby": "^4.6.0",
+    "lodash.merge": "^4.6.0",
+    "lodash.omit": "^4.5.0",
+    "lodash.omitby": "^4.6.0",
+    "lodash.random": "^3.2.0",
+    "lodash.without": "^4.4.0",
     "mocha": "^3.2.0",
     "nock": "^9.0.0",
     "nyc": "^10.0.0",
@@ -31,11 +40,13 @@
   },
   "dependencies": {
     "@google/cloud-diagnostics-common": "0.3.0",
-    "lodash": "^4.13.1"
+    "extend": "^3.0.0",
+    "is": "^3.2.0",
+    "lodash.has": "^4.5.2"
   },
   "nyc": {
     "exclude": [
-      "utils/fuzzer.js"
+      "./utils/fuzzer.js"
     ]
   }
 }
