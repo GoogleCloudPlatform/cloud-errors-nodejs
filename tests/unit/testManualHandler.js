@@ -133,4 +133,51 @@ describe('Manual handler', function () {
       assert.strictEqual(r.context.httpRequest.method, 'SNIFF');
     });
   });
+
+  describe('Custom Payload Builder', function () {
+    it('Should accept builder instance as only argument', function () {
+      var msg = 'test';
+      var r = report(new ErrorMessage().setMessage(msg));
+      assert.strictEqual(r.message, msg, 
+        'string message should propagate from error message instance');
+    });
+    it('Should accept builder and request as arguments', function () {
+      var msg = 'test';
+      var oldReq = {method: 'GET'};
+      var newReq = {method: 'POST'};
+      var r = report(
+        new ErrorMessage().setMessage(msg).consumeRequestInformation(oldReq),
+        newReq
+      );
+      assert.strictEqual(r.message, msg, 
+        'string message should propagate from error message instance');
+      assert.strictEqual(r.context.httpRequest.method, newReq.method,
+        [
+          'request argument supplied at report invocation should propagte and, if',
+          'supplied, should overwrite any prexisting data in the field.'
+        ].join('\n')
+      );
+    });
+    it('Should accept message and additional message params as arguments', function () {
+      var oldMsg = 'test';
+      var newMsg = 'analysis';
+      var r = report(
+        new ErrorMessage().setMessage(oldMsg),
+        newMsg
+      );
+      assert.strictEqual(r.message, newMsg, 
+        [
+          'message argument supplied at report invocation should propagte and, if',
+          'supplied, should overwrite any prexisting data in the message field.'
+        ].join('\n'));
+    });
+    it('Should accept message and callback function as arguments', function (done) {
+      var oldMsg = 'test';
+      var newMsg = 'analysis';
+      var r = report(
+        new ErrorMessage().setMessage(oldMsg),
+        function () { done(); }
+      );
+    });
+  });
 });

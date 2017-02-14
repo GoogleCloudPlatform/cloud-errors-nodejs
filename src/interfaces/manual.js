@@ -40,9 +40,10 @@ function handlerSetup(client, config) {
   /**
    * The interface for manually reporting errors to the Google Error API in
    * application code.
-   * @param {Any} err - error information of any type or content. This can be
-   *  of any type but better errors will be logged given a valid instance of
-   *  Error class.
+   * @param {Any|ErrorMessage} err - error information of any type or content.
+   *  This can be of any type but by giving an instance of ErrorMessage as the
+   *  error arugment one can manually provide values to all fields of the
+   *  potential payload.
    * @param {Object} [request] - an object containing request information. This
    *  is expected to be an object similar to the Node/Express request object.
    * @param {String} [additionalMessage] - a string containing error message
@@ -54,6 +55,7 @@ function handlerSetup(client, config) {
    * the parameters given.
    */
   function reportManualError(err, request, additionalMessage, callback) {
+    var em;
     if (config.lacksCredentials()) {
       return;
     }
@@ -74,11 +76,14 @@ function handlerSetup(client, config) {
       additionalMessage = undefined;
     }
 
-    var em = new ErrorMessage();
-    em.setServiceContext(config.getServiceContext().service,
-                         config.getServiceContext().version);
-
-    errorHandlerRouter(err, em);
+    if (err instanceof ErrorMessage) {
+      em = err;
+    } else {
+      em = new ErrorMessage();
+      em.setServiceContext(config.getServiceContext().service,
+                          config.getServiceContext().version);
+      errorHandlerRouter(err, em);
+    }
 
     if (isObject(request)) {
       em.consumeRequestInformation(manualRequestInformationExtractor(request));

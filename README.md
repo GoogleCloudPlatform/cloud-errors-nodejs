@@ -125,6 +125,21 @@ var errors = require('@google/cloud-errors')({
 
 ## Examples
 
+### Reporting Manually
+
+```JS
+var errors = require('@google/cloud-errors').start();
+// Use the error message builder to custom set all message fields
+var errorEvt = errors.event()
+  .setMessage('My error message')
+  .setUser('root@nexus');
+errors.report(errorEvt, () => console.log('done!'));
+// Or just use a regular error
+errors.report(new Error('My error message'), () => console.log('done!'));
+// One can even just use a string
+errors.report('My error message');
+```
+
 ### Using Express
 
 ```JS

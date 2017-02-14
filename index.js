@@ -32,6 +32,7 @@ var hapi = require('./src/interfaces/hapi.js');
 var manual = require('./src/interfaces/manual.js');
 var express = require('./src/interfaces/express.js');
 var restify = require('./src/interfaces/restify');
+var messageBuilder = require('./src/interfaces/message-builder.js');
 var uncaughtException = require('./src/interfaces/uncaught.js');
 var createLogger = require('./src/logger.js');
 
@@ -65,6 +66,7 @@ var createLogger = require('./src/logger.js');
  *  Stackdriver Error Reporting Service
  * @property {Function} express - The express plugin for Stackdriver Error
  *  Reporting
+ * @property {Function} message - Returns a new ErrorMessage class instance
  */
 
 // TODO: Update this documentation
@@ -96,6 +98,7 @@ function Errors(initConfiguration) {
   this.report = manual(client, config);
   this.express = express(client, config);
   this.restify = restify(client, config);
+  this.event = messageBuilder(config);
 
   if (koa) {
     this.koa = koa(client, config);
