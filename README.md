@@ -123,6 +123,24 @@ var errors = require('@google/cloud-errors')({
 });
 ```
 
+#### Notes On Uncaught Exception Reporting
+
+It should be noted that leaving the `reportUncaughtExceptions` configuration option set to its default of `true`
+will cause the error-reporting library to attach to the `process` objects `'uncaughtException'` event which will
+result in the following side effects:
+
+  1. Uncaught exceptions in your script will **not** be printed to `stderr` unless ones application code has itself
+  attached to the `'uncaughtException'` event and is manually printing out all error information. This may be achieved
+  via the following snippet:
+    
+```js
+  process.on('uncaughtException', (err) => console.error(err));
+  var errors = require('@google/cloud-errors');
+```
+  2. The errors-reporting library will make a **best-effort attempt** to try and report the error to the Stackdriver
+  error-reporting service before VM shutsdown.
+  
+
 ## Examples
 
 ### Reporting Manually
