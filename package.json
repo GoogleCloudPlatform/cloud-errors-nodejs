@@ -39,7 +39,7 @@
     "tape": "^4.5.1"
   },
   "dependencies": {
-    "@google/cloud-diagnostics-common": "0.3.0",
+    "@google/cloud-diagnostics-common": "0.3.1",
     "extend": "^3.0.0",
     "is": "^3.2.0",
     "lodash.has": "^4.5.2"
